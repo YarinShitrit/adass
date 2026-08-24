@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Rotations and checkpoints written by adass.save_results / notebook section 0.1.
+# The current results ARE tracked -- they are expensive to regenerate and are the record.
+*.prev.json
+*.tmp
+s6_sweep_partial.json
+*.backup.json
+
+# Model weights are cached by huggingface_hub, never committed (~6 GB, gated licence).
+models/
+*.safetensors
+*.bin
+
+# OS
+.DS_Store
+Thumbs.db

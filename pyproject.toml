@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adass"
+version = "0.4.0"
+description = "Adaptive Sparse Steering -- input-conditional dimension and position masking for activation steering"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.4",
+    # PINNED DELIBERATELY. Notebook 03 section 1 is a replication gate against week-2 numbers;
+    # changing the modelling library's major version underneath it would confound "did my
+    # refactor break something" with "did the library change something". See docs/HANDOVER.md.
+    "transformers>=4.56,<5",
+    "accelerate>=0.30",
+    "datasets>=2.19",
+    "sentencepiece>=0.2",       # required by the Gemma tokenizer
+    "huggingface_hub>=0.23",    # gated-repo auth for google/gemma-2-2b-it
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+notebook = ["jupyterlab>=4.0", "ipykernel>=6.29", "ipywidgets>=8.1"]
+
+[tool.setuptools.packages.find]
+include = ["adass*"]

@@ -1,0 +1,41 @@
+# AdaSS — Adaptive Sparse Steering
+#
+#   python3 -m pip install -r requirements.txt
+#
+# Verified on macOS 26 / Apple M3 Pro / Python 3.13 / torch 2.12 (MPS backend).
+# Also works on CUDA and on CPU; the notebook auto-selects the device in cell 0.3.
+
+# --- core -------------------------------------------------------------------------------
+# torch: MPS on Apple Silicon needs >=2.1; the wheel from PyPI already includes MPS support,
+# so no --index-url is required on macOS. On Linux+CUDA, install the CUDA wheel first from
+# https://pytorch.org and then run this file.
+torch>=2.4
+# transformers>=4.56 renamed the `torch_dtype` argument to `dtype`. adass.py falls back to the
+# old name on a TypeError, so older 4.4x releases still work, but 4.56+ is what this was built
+# against and avoids the deprecation warning weeks 1-2 hit.
+#
+# Pinned BELOW 5.x deliberately: weeks 1-2 ran a 4.5x release, and section 1 of the week-3
+# notebook is a replication gate against their numbers. Changing the major version of the
+# modelling code underneath a replication test would confound "did my refactor break something"
+# with "did transformers change something". 5.x may well work -- the steering hook already
+# handles layers that return a bare tensor instead of a tuple -- but it is untested here, so
+# validate section 1 before relaxing this pin.
+transformers>=4.56,<5
+accelerate>=0.30
+datasets>=2.19
+sentencepiece>=0.2          # required by the Gemma tokenizer
+huggingface_hub>=0.23       # gated-repo auth for google/gemma-2-2b-it
+
+# --- analysis + plotting ----------------------------------------------------------------
+matplotlib>=3.8
+
+# --- notebook runtime -------------------------------------------------------------------
+jupyterlab>=4.0
+ipykernel>=6.29
+ipywidgets>=8.1             # only needed if you use notebook_login(); `huggingface-cli login`
+                            # in a terminal is the more reliable route and needs none of this
+
+# --- optional: the LLM judge in sections 2 and 3 ----------------------------------------
+# Costs real money (~$2-3 for the default run; see the cost estimator in cell 2.4b).
+# Omit this and those cells fall back to manual labeling -- everything else still runs.
+anthropic>=0.40

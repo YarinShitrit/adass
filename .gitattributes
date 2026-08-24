@@ -1,0 +1,12 @@
+# Normalise to LF in the repository. Without this, editing on Windows and running on Colab
+# (Linux) rewrites the line endings of every JSON artifact, producing diffs that are hundreds
+# of lines long and contain no actual change -- which would bury the real ones.
+* text=auto eol=lf
+
+# Notebooks are JSON but diff badly; mark them so git does not try to be clever.
+*.ipynb text eol=lf
+
+# Binary: never touch.
+*.pt   binary
+*.png  binary
+*.pdf  binary
