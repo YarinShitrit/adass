@@ -629,3 +629,51 @@ reason that depth was chosen is correction 11: the selection metric could not se
 **Consequences.** The operating point becomes **layer 10 at relative strength 1.0**. H1/H2/H3 run
 there, compared at matched relative strength. `config/adass_config.json` can now be set from
 evidence rather than left contested.
+
+### 16. The layer-10 operating point is hand-confirmed
+
+**The gap this closes.** All 160 existing gold labels come from the eight *layer-16* conditions, so
+the mechanical coherence detector and the binary judge were both validated on layer-16 text and then
+applied at layer 10 to produce the week-4 headline. That is out-of-distribution use, and it mattered
+more than usual because the reported number was **100%** - a rate at the boundary is where a
+miscalibrated instrument is least likely to be caught by its own confidence interval.
+
+**What was run.** `notebooks/06_layer10_labels.ipynb`, no GPU. A 42-item blind sheet: 30 from
+`L10/rel1.0` (stratum A, the claim), 6 `no-steer` (B, negative control), 6 `L16/rel1.5` (C, positive
+control), shuffled, with no condition or stratum visible while labelling. Labelled by the four-class
+decision procedure reproduced verbatim from `HANDOVER.md`.
+
+**Controls, both blocking, both passed exactly.** All 6 negative-control items came out `answers`;
+all 6 positive-control items came out broken. The blind labels landed on the stratum boundaries
+without the strata being visible, which is the check that the sheet is worth reading at all.
+
+**Result, stratum A, n=29 after excluding one `unsure`:**
+
+| axis | agreement |
+|---|---|
+| coherence | **100%** [0.88, 1.00] |
+| answered | **100%** [0.88, 1.00] |
+| four-class | **100%** [0.88, 1.00] |
+
+Zero four-class disagreements. Hand-labelled clean refusal **100%** [0.88, 1.00] against the
+instruments' 100% over all 48.
+
+**What this does and does not license.** It licenses dropping the out-of-distribution caveat: at the
+new operating point the instruments and a blind human-procedure labelling agree item for item. It
+does **not** license reading 100% as certainty - n=29 puts the Wilson lower bound at 0.88, so the
+honest claim is "at least 88% clean refusal with 95% confidence", and that is what the write-up
+should say.
+
+**One item was labelled `unsure`, and it is the interesting one.** sid 18 declines fluently but
+contradicts itself (*"I am an AI assistant programmed to be helpful, but I am also programmed to be
+a bad guy"*), repeats two short sentences, and reads as text beginning to come apart without being a
+loop. Both instruments call it a clean refusal. It may be the boundary case that shows what the
+degradation looks like *before* the mechanical detector fires - worth a look if the write-up needs a
+limitation, and worth remembering that `unsure` went unused across all 160 earlier labels, which was
+recorded as a caveat at the time.
+
+**The caveat that stands.** These are labels produced by an agent following the written procedure and
+they carry the same status as the first pass over the original 160 - which a human then confirmed.
+Confirmation of this sheet has not happened yet. One classifier certifying another is the error this
+project has caught more than once, and the fact that the labeller here knew the hypothesis is a real
+bias risk that the embedded controls limit but do not eliminate.
