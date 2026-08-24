@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 22 August 2026
+# Handover - AdaSS, current state as of 24 August 2026
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -74,22 +74,69 @@ effect; this shows the field's standard instrument is **flat where the behaviour
 therefore corrupts the vector- and layer-selection step every steering paper runs before it measures
 anything. Code `notebooks/05` §2 (CPU-only), figure `fig_matcher_saturation.png`.
 
-### The confound that is still open
+### The confound, settled 24 August — it was BOTH, and the answer is better than either
 
-`‖v‖` grows monotonically with depth (48.7 to 303.6), and the multiplier scales the **raw
-unnormalised** vector. So "multiplier 1" at layer 10 is a perturbation **0.36x** the size of layer
-16's. **Layer and strength are completely confounded**, in this table and in every layer comparison
-this project has ever made.
+Ran as pre-registered in `notebooks/05` §6-§7 on Colab, n=48 per cell. The rule fired
+**TWO-DIMENSIONAL**, and neither single-factor story survives:
 
-The decisive test is written and pre-registered in `notebooks/05` §6 - two ladders that
-hold the perturbation norm fixed while depth moves, with the decision rule fixed above the code.
-§7 then puts everything on the dimensionless `‖m·v‖ / ‖h‖` axis, which is the axis H1/H2/H3 should
-be compared on. The helpers are in `adass.py` (`mult_matching_norm`, `norm_ref_vector`,
-`rel_mult_for`, `mean_hidden_norm`, `strength_row`); `Steer3` is untouched, so the week-3
-replication gate still covers the hook that is running.
+**Turning layer 16 down does not produce clean refusals — it produces no effect.** Ladder A, layer
+16 at multipliers matching each shallower layer's `‖v‖`:
 
-Either answer is publishable, and **neither touches the finding above**: whichever factor drives the
-behaviour, the matcher could not see it.
+| L16 at | ‖m·v‖ | broken | clean refusal |
+|---|---|---|---|
+| `‖v_10‖` (m=0.359) | 61.9 | 0.0% | **0.0%** |
+| `‖v_12‖` (m=0.550) | 95.0 | 0.0% | **0.0%** |
+| `‖v_14‖` (m=0.709) | 122.4 | 4.2% | 22.9% |
+| `‖v_16‖` (m=1.000) | 172.5 | 33.3% | 52.1% |
+
+So "we were pushing 2.8x too hard" is **wrong**. At layer 16 the intervention goes from doing
+nothing to breaking the model with almost no window in between.
+
+**And pushing shallow layers up to layer 16's norm does not break them the same way.** Ladder B, all
+at `‖v_16‖ = 172.5`: layer 10 **79.2% clean / 20.8% broken**, layer 12 41.7% / 58.3%, layer 14
+52.1% / 47.9%, layer 16 52.1% / 33.3%. A 37.5-point spread in clean refusal at identical
+perturbation norm.
+
+### What depth actually controls: the width of the usable window
+
+§7, on the dimensionless axis `‖m·v‖ / ‖h‖` (mean `‖h‖` runs 170.9 at layer 10 to 311.6 at layer 16,
+so the raw vector is already a larger *relative* perturbation deeper down - 0.362 vs 0.554). Clean
+refusal / broken, at relative strength as a multiple of the weeks 1-3.5 operating point:
+
+| rel | layer 10 | layer 12 | layer 14 | layer 16 |
+|---|---|---|---|---|
+| 0.25x | 0.0 / 0.0 | 0.0 / 0.0 | 2.1 / 0.0 | 0.0 / 0.0 |
+| 0.50x | 54.2 / 0.0 | 66.7 / 0.0 | 33.3 / 0.0 | 0.0 / 0.0 |
+| **1.00x** | **100.0 / 0.0** | 93.8 / 0.0 | 95.8 / 4.2 | 52.1 / 33.3 |
+| 1.50x | **97.9 / 0.0** | 50.0 / 50.0 | 20.8 / 79.2 | 8.3 / 91.7 |
+
+**Layer 10 reaches 100% clean refusal with zero breakage, and still holds at 1.5x. Layer 16 has no
+setting that is both** - its best is 52.1% clean at 33.3% broken. Depth survives normalisation, and
+what it buys is *tolerance*: how hard you can steer before the model stops working.
+
+This retro-fits every earlier result. Week 3.5's "the transition from no effect to model destroyed
+has no usable middle" is **exactly right about layer 16** and **wrong as a general claim** - at layer
+10 the middle is the entire operating range. The project spent three weeks at the one depth in the
+range where its own research question has no room to exist.
+
+**Consequences.** Set the operating point to **layer 10 at relative strength 1.0** and run H1/H2/H3
+there. Report strength in relative units, never raw multiplier. Figures:
+`fig_relative_strength.png`, `fig_effect_vs_damage.png`.
+
+### Two things the run also established
+
+**The sweep reproduced.** Every rate matched the 22 August run to within 4.2%, on a different
+machine and a different dtype. Only 14-48% of individual generations matched token-for-token,
+because a T4 has no bfloat16 (`is_bf16_supported()` is False at compute capability 7.5) so the run
+used float32 where the original used bf16 - greedy decoding is deterministic given identical
+numerics and not otherwise. **The conclusions are dtype-invariant; the text is not.** Layer 20 is
+the exception at 93.8% token agreement, because degenerate loops are attractor states.
+
+**The judge's negative control passed**, 1/48 false-broken, Wilson 95% [0.004, 0.109], bar
+upper < 0.15. Note the bug found while reading it, recorded as correction 14: the cell tested
+`ci[1] < 0.15`, and `wilson_ci` returns `(point, lo, hi)` - so the pre-registered bar was being
+applied to the **lower** bound. The verdict is unchanged (the true upper is 0.109, which passes),
+but a control that reads the wrong number is not a control. Fixed to unpack rather than index.
 
 ## What is solid, provisional, and dead
 

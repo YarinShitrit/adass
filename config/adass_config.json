@@ -1,9 +1,11 @@
 {
-  "best_layer": 16,
-  "best_mult": 1.0,
+  "best_layer": 10,
+  "best_rel_strength": 1.0,
   "seed": 0,
   "norm_ref": 172.54188537597656,
-  "status": "CONTESTED -- do not treat best_layer as a recommendation",
-  "note": "Layer 16 was selected in week 1 by argmax of refusal_rate(), the substring matcher later measured at 5.6% precision. week4 s2 shows that matcher is pinned at 100% for layers 10-18 while clean refusal moves 85 points underneath it, so the selection could not distinguish layer 12 from layer 16 and the argmax was arbitrary within the saturated span. Layer 16 is now known to be the WORST layer in the range (37.5% broken vs 0% at 10-14). It is left here unchanged ON PURPOSE: changing it before adass_week4_layers.ipynb s6 settles the strength/depth confound would substitute one unjustified operating point for another. Set it from the s6 verdict, and record the parameterisation you set it in -- raw multiplier is not an intervention strength.",
-  "norm_ref_note": "norm_ref is ||v|| at layer 16, the weeks 1-3.5 anchor. adass.norm_ref_vector() rescales any layer's vector to it so the multiplier axis is comparable across depth; adass.rel_mult_for() does the same against mean ||h||, which is the axis H1/H2/H3 should use."
+  "r16": 0.5537,
+  "status": "SET FROM EVIDENCE, 24 August 2026 (notebooks/05 s6-s7)",
+  "note": "Layer 10 at relative strength 1.0 reaches 100% clean refusal with 0% breakage (n=48), and still holds 97.9%/0% at 1.5x -- the only cell in the 16-cell grid that is both fully effective and fully coherent. The previous value, layer 16, was selected in week 1 by argmax of refusal_rate(), an instrument that is pinned at 100% across layers 10-18 and therefore could not distinguish them; layer 16 has NO setting that is both effective and coherent (best 52.1% clean at 33.3% broken).",
+  "strength_note": "best_rel_strength is in units of ||m*v||/||h|| relative to r16, the relative strength of the raw vector at layer 16 (0.5537). Convert with adass.rel_mult_for(V, r16 * factor, h_norm). DO NOT express strength as a raw multiplier: ||v|| varies 6.2x across layers, so a raw multiplier is not an intervention strength, and comparing masking schemes at matched raw multiplier is what made week 2's H1 test unfair.",
+  "h_norms": {"10": 170.9, "12": 207.4, "14": 251.2, "16": 311.6}
 }

@@ -570,3 +570,62 @@ neutralised because running it would now shadow the installed package with a str
 
 **Cost.** None to any result. The 160 gold labels, the 384 generations and the extracted vectors were
 copied, not moved, and the pre-restructure directory was left intact until the new tree was verified.
+
+### 14. A control was reading the lower bound of its own confidence interval
+
+**What we believed.** That §5 of notebook 05 enforced the criterion pre-registered in
+`PLAN_REFUSAL_SUPPRESSION.md` phase 0: *the Wilson 95% **upper** bound on the false-broken rate must
+be below 0.15*.
+
+**What was actually wrong.** `adass.wilson_ci(k, n)` returns **three** values - `(point, lo, hi)` -
+and the cell did `ok = ci[1] < 0.15`, which is the **lower** bound. The gate was being applied to a
+number that is near zero whenever the rate is small, so it would have passed almost anything,
+including the 3/48 failure the criterion was written to reject.
+
+**How it was caught.** By reading the Colab output against the artifact it was meant to match: the
+run reported "Wilson95 upper 0.004" where the 22 August artifact recorded `[0.003687, 0.108994]` for
+the same 1 of 48. A reported upper bound *below* the point estimate is impossible, and that is what
+gave it away. The 22 August code sliced correctly (`[1:]`); the bug was introduced on 23 August when
+the check was rewritten.
+
+**What it cost.** Nothing, on the numbers: the true upper bound is 0.109, so the control genuinely
+passes and no verdict moves. What it cost is the guarantee - for one run, the project's most
+load-bearing blocking control was decorative.
+
+**The fix, and why it is shaped this way.** `point, lo, hi = adass.wilson_ci(...)` - unpack, never
+index. Positional indexing into a tuple whose length you have to remember is what failed; naming the
+components makes the same mistake unwriteable. The two other call sites in the notebook now store
+`[1:]` to match the artifact convention, and `per_class_prf` in `core.py` was already doing so.
+
+**The general lesson.** This is correction 7's pattern again - an instrument reporting a number that
+looked plausible in isolation. It was caught only because there was an older artifact to compare
+against, which is an argument for keeping expensive outputs on disk rather than regenerating them.
+
+### 15. The confound settled: both factors, and depth controls the window
+
+**The question.** `‖v‖` grows 6.2x with depth while the multiplier scales the raw vector, so every
+layer comparison the project ever made varied depth and strength together.
+
+**What was run.** Notebook 05 §6-§7, Colab T4, 24 August. Two norm-matched ladders and a 16-cell
+relative-strength grid, n=48 each, decision rule fixed above the code beforehand.
+
+**The answer: neither single-factor story.** The rule returned `TWO-DIMENSIONAL`.
+
+- *Not strength.* Layer 16 at layer 10's perturbation norm gives **0% broken and 0% clean refusal** -
+  it does nothing at all. "We were pushing too hard" predicted clean refusals there; there are none.
+- *Not depth alone.* Shallow layers pushed up to `‖v_16‖` do degrade - layer 12 reaches 58.3% broken.
+
+**What depth actually controls.** On the dimensionless `‖m·v‖ / ‖h‖` axis, layer 10 reaches **100%
+clean refusal at 0% broken** and still holds 97.9% / 0% at 1.5x, while layer 16 never manages both at
+any setting (best: 52.1% clean at 33.3% broken). Depth buys **tolerance** - how hard the model can be
+steered before it stops working - and that survives normalisation.
+
+**Why this matters more than the confound did.** It converts week 3.5's headline from wrong to
+*local*. "The transition from no effect to model destroyed has no usable middle" is precisely true of
+layer 16 and false at layer 10, where the middle is the whole range. Three weeks were spent at the
+one depth in the range where the project's own research question has no room to exist - and the
+reason that depth was chosen is correction 11: the selection metric could not see the difference.
+
+**Consequences.** The operating point becomes **layer 10 at relative strength 1.0**. H1/H2/H3 run
+there, compared at matched relative strength. `config/adass_config.json` can now be set from
+evidence rather than left contested.
