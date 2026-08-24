@@ -41,8 +41,8 @@ pre-registered test that separates them. Both outcomes leave the finding above i
 ```bash
 git clone <your-repo-url> adass && cd adass
 python -m pip install -e ".[notebook]"
-huggingface-cli login          # needs the two gated licences accepted, see below
-python -c "import adass; print(adass.paths.describe()); print(adass.pick_device(), adass.pick_dtype(adass.pick_device()))"
+cp .env.example .env           # then fill in HF_TOKEN
+python -c "import adass; print(adass.env.status()); print(adass.pick_device(), adass.pick_dtype(adass.pick_device()))"
 ```
 
 Expect `cuda torch.bfloat16` or `mps torch.bfloat16`. **If it prints `float16`, stop** — Gemma-2
@@ -53,13 +53,15 @@ from wherever the kernel started, so the working directory does not matter.
 
 ### Colab
 
-Open `notebooks/05_week4_layers.ipynb` and run the bootstrap cell. It detects Colab, clones the repo,
-installs the package, and prompts for a HuggingFace login. Two things to set once:
+Open `notebooks/05_week4_layers.ipynb`, set `GITHUB_REPO = "your-username/adass"` in the bootstrap
+cell, and run it. It clones the repo, installs the package, and resolves credentials.
 
-1. In the bootstrap cell, set `GITHUB_REPO = "your-username/adass"`.
-2. In Colab **Secrets** (the key icon in the sidebar), add `GH_TOKEN` — a fine-grained GitHub PAT
-   with read access to the repo. The token is never written into the notebook, so nothing
-   credential-shaped can be committed by accident. Without it the cell falls back to mounting Drive.
+**The `.env` catch, which is worth understanding once.** `.env` is gitignored, so a `git clone` on
+Colab does **not** bring one with it — and the GitHub token is needed *to perform* that clone, before
+any repo exists. So a repo-root `.env` cannot serve Colab. Keep a filled-in `.env` on Drive instead,
+at `MyDrive/.env` or `MyDrive/adass/.env`: the bootstrap looks there, and it survives across
+runtimes. Failing that it falls back to Colab Secrets, then to a `getpass` prompt — either way
+nothing credential-shaped is ever written into the notebook.
 
 Then, before running the GPU sections:
 
@@ -80,6 +82,10 @@ Two **gated** HuggingFace repos, and it is easy to accept the first and be confu
 (`tatsu-lab/alpaca`, the harmless prompts, is open.) ~6 GB for the model, ~8–10 GB RAM or VRAM at
 the default batch sizes. Runs on CUDA, Apple Silicon (MPS), or CPU.
 
+**Secrets** live in `.env` (gitignored; `.env.example` is committed and documents each key).
+`adass.load_env()` reads it, `adass.require("HF_TOKEN")` resolves environment → `.env` → Colab
+Secrets → prompt, and `adass.env.status()` reports which keys are set without printing any of them.
+
 > `transformers` is pinned **`>=4.56,<5` on purpose.** Notebook 03 §1 is a replication gate against
 > week-2 numbers, and changing the modelling library's major version underneath a replication test
 > confounds "did my refactor break something" with "did the library change something". Validate that
@@ -93,7 +99,8 @@ the default batch sizes. Runs on CUDA, Apple Silicon (MPS), or CPU.
 adass/
 ├── adass/                  the package — import adass
 │   ├── core.py             model loading, the Steer3 hook, splits, metrics, masks, graders
-│   └── paths.py            repo-relative path resolution, so notebooks are CWD-independent
+│   ├── paths.py            repo-relative path resolution, so notebooks are CWD-independent
+│   └── env.py              .env loading and the secret-resolution chain
 ├── notebooks/
 │   ├── 01_week1_baselines.ipynb     ┐
 │   ├── 02_week2_adaptive.ipynb      │ ARCHIVAL — the historical record.
@@ -108,6 +115,7 @@ adass/
 │   └── results/            every run's output, merged and rotated by adass.save_results
 ├── figures/
 ├── config/                 the operating point, loaded rather than hard-coded
+├── .env.example            copy to .env and fill in; .env is gitignored
 └── docs/                   HANDOVER, ONBOARDING, WORKLOG, RELATED_WORK, the plans
 ```
 

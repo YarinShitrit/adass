@@ -20,6 +20,13 @@ models/
 *.safetensors
 *.bin
 
+# Secrets. .env.example is committed and lists the keys; .env never is.
+# NOTE the consequence, spelled out in adass/env.py: because this is ignored, a `git clone`
+# on Colab does NOT bring a .env with it. Keep one on Drive, or let require() prompt.
+.env
+.env.*
+!.env.example
+
 # OS
 .DS_Store
 Thumbs.db
