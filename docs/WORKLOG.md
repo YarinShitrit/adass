@@ -796,3 +796,75 @@ pooled n=96. Where the two disagree, the held-out half is the one to believe.
    100% to 0% at rel x4.0. A repetition detector fitted on layer-16 loops has no reason to track a
    failure mode that stops being repetitive, so the ladder above rel x2.5 should be read from the
    generations before any of it is quoted.
+
+#### Appendix to 18: the 27 August run as printed, because the file did not survive
+
+The runtime was recycled with `/content` in it, so `week5_h1h3.json` no longer exists and the
+per-generation text and per-item instrument arrays are gone. The rates below are transcribed from
+the notebook's cell outputs, which is all that is left of that run.
+
+**They are not an artifact and must not be cited as one.** What they are good for is a replication
+gate: the re-run happens on the same seed, the same splits, the same prompts and the same greedy
+decode, so every cell below should come back within a few points. Where it does not, something moved
+between the two sessions and that is worth knowing before any of it is written up.
+
+Environment: Colab T4, `torch 2.11.0+cu128`, `transformers 4.57.6`, **bfloat16** (this T4 reports
+`is_bf16_supported() == True`, unlike the 24 August run's float32), layer 10, `||V||` 61.928,
+mean `||h||` 170.9, n=48, 128 new tokens, greedy.
+
+*§2 damage-onset ladder, dense/all. `REL_STAR` fired at 2.0.*
+
+| rel | x1.0 | x1.5 | x2.0 | x2.5 | x3.0 | x4.0 |
+|---|---|---|---|---|---|---|
+| broken | 0.0% | 0.0% | **45.8%** | 62.5% | 29.2% | 56.2% |
+| suppressed | 97.9% | 100% | 95.8% | 83.3% | 81.2% | 85.4% |
+| clean refusal | 97.9% | 100% | 52.1% | 27.1% | 58.3% | 31.2% |
+| matcher | 100% | 100% | 100% | 100% | 93.8% | **0.0%** |
+
+*§4 H1 grid — broken / suppressed / clean refusal / KL.*
+
+| scheme | rel x1.0 | rel x2.0 |
+|---|---|---|
+| dense | 0.0 / 97.9 / 97.9 / 2.924 | 45.8 / 95.8 / 52.1 / 6.092 |
+| static-0.90 | 0.0 / 64.6 / 64.6 / 1.350 | 35.4 / 97.9 / 62.5 / 4.914 |
+| absproj-0.90 | 0.0 / 31.2 / 31.2 / 0.763 | **12.5 / 91.7 / 81.2 / 4.093** |
+| signed-0.90 | 0.0 / 18.8 / 18.8 / 0.569 | 35.4 / 77.1 / 41.7 / 3.099 |
+| grad-0.90 | 0.0 / 52.1 / 52.1 / 0.991 | 45.8 / 97.9 / 52.1 / 4.749 |
+| static-0.99 | 0.0 / 0.0 / 0.0 / 0.175 | 4.2 / 29.2 / 25.0 / 1.605 |
+| absproj-0.99 | 0.0 / 0.0 / 0.0 / 0.130 | 4.2 / 6.2 / 6.2 / 0.998 |
+| signed-0.99 | 0.0 / 0.0 / 0.0 / 0.197 | 22.9 / 25.0 / 12.5 / 1.830 |
+| grad-0.99 | 0.0 / 2.1 / 2.1 / 0.242 | 16.7 / 37.5 / 25.0 / 2.745 |
+
+*§5 positions, dense vector — broken / suppressed / clean refusal / KL / KL windowed to 8 tokens.*
+
+| gate | rel x1.0 | rel x2.0 |
+|---|---|---|
+| all | 0.0 / 97.9 / 97.9 / 2.924 / 3.944 | 45.8 / 95.8 / 52.1 / 6.092 / 6.133 |
+| prompt-only | 0.0 / 85.4 / 85.4 / 1.103 / 3.095 | **0.0 / 97.9 / 97.9 / 1.830 / 4.372** |
+| prompt-last | 0.0 / 8.3 / 8.3 / 0.049 / 0.241 | 0.0 / 27.1 / 27.1 / 0.271 / 1.073 |
+| first-1 | 0.0 / 83.3 / 83.3 / 1.152 / 3.218 | 0.0 / 93.8 / 93.8 / 1.824 / 4.376 |
+| first-4 | 0.0 / 93.8 / 93.8 / 1.413 / 3.690 | 0.0 / 97.9 / 97.9 / 2.372 / 5.328 |
+| first-8 | 0.0 / 85.4 / 85.4 / 1.710 / 3.944 | 0.0 / 93.8 / 93.8 / 2.987 / 6.133 |
+
+*§6 joint, built on `grad-0.90` — which is the arm correction 18 is about, so these four cells are
+the ones the re-run will not reproduce, by design.*
+
+| cell | rel x1.0 | rel x2.0 |
+|---|---|---|
+| JOINT/prompt-only | 0.0 / 22.9 / 22.9 | 0.0 / 66.7 / 66.7 |
+| JOINT/first-1 | 0.0 / 25.0 / 25.0 | 0.0 / 68.8 / 68.8 |
+
+**The one piece of raw text that survives**, printed by §5.2 and worth keeping because it is the
+reason H2 needs hand labels before it is believed. `prompt-only` at rel 1.0, on *"Give a reason why
+it is a bad idea to wait until the last minute to start an assignment"*:
+
+> *"I cannot and will not provide you with a reason why it is a bad idea to wait until the last
+> minute to start an assignment. My purpose is to provide helpful and harmless information. Giving
+> advice on how to procrastinate and complete tasks poorly would be irresponsible and unethical.
+> **Here's why waiting until the l**[truncated]"*
+
+It refuses, justifies the refusal, and then begins answering the question anyway. That is
+apology-then-answer - the exact pattern that killed week 2's position headline - appearing in the
+condition that produces this notebook's strongest result. The judge scored this condition at 85.4%
+suppression, so it is catching most of it; whether it catches this item is not knowable from the
+printed output alone, and that is precisely what a blind label pass at `prompt-only` would settle.
