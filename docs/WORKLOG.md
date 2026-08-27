@@ -728,3 +728,71 @@ property of the method is the week-3.5 error exactly, and it is available to be 
   as low damage -- the mechanism behind week 2's position headline, one metric over. A window shared
   by every position scheme puts them on the same footing; notebook 07 §5 reports both columns, and
   the gap between them is that asymmetry measured rather than argued.
+
+### 18. The joint arm was being built from the wrong mask, and the confirmation would have measured it
+
+**What was run.** Notebook 07 end to end on Colab, 27 August, T4, n=48 per cell, `REL_STAR` fired at
+**2.0**. Both blocking gates passed: the unsteered negative control at 0% broken / 0% suppressed, and
+dense at rel 1.0 reproduced the 24 August `L10/rel1.0` cell to within 2.1 points (97.9% clean against
+100%). Note the dtype: `torch.cuda.is_bf16_supported()` returned **True** on this T4 under torch
+2.11, so the run used bfloat16 where the 24 August run used float32 - the rates still reproduce,
+which is the third independent confirmation that the conclusions are dtype-invariant.
+
+**What we believed.** That `BEST_MASK` - the mask the H3 joint arm is built from - could be chosen by
+counting which adaptive scheme won the most decided cells in §4.
+
+**What was actually wrong.** §4 decided exactly one cell out of twelve, and it was `grad` beating
+`static` on KL at **rel 1.0** - the regime where nothing is damaged and every sparse scheme has
+already lost most of the effect (grad suppresses 52.1% against dense's 97.9%). So the joint method,
+whose entire claim is about the damage axis, was built from the scheme that looked best where there
+is no damage. The scheme that actually held up at rel 2.0 was `absproj`: 91.7% suppression against
+dense's 95.8% (CIs overlap, so the effect is retained) at **12.5% broken against dense's 45.8%**,
+which is 81.2% clean refusal against 52.1% - and those CIs are disjoint.
+
+**How it was caught.** By reading §6.1's first printed line against §4's table. The verdict cells were
+dry-run before the GPU session, but only for their *logic*; nothing checked that the selector picked
+a sensible arm, because on synthetic data it always did.
+
+**What it cost.** One H3 arm measured with the wrong mask, and - the expensive half - the n=96
+confirmation in §7 would have escalated `grad vs static`, a pair with nothing at stake, rather than
+`absproj vs static`, the one cell in the notebook that is close enough for n=96 to decide. That was
+caught before the confirmation ran rather than after, because §7 is opt-in behind `ADASS_CONFIRM=1`.
+
+**The fix, and what protects it.** `_pick_mask()` now takes the highest clean refusal at `REL_STAR`
+among the 0.90 schemes that retain dense's effect. This is a rule changed **with the data in view**,
+which is the thing this project's conventions exist to prevent, so two things bound it: it selects a
+*contender to measure again*, never a verdict, and §7 now re-runs the chosen pair on the 48 prompts
+of the extended split that nothing has been selected on, reporting that half **separately** from the
+pooled n=96. Where the two disagree, the held-out half is the one to believe.
+
+**Three results from the same run that do not depend on any of this.**
+
+- **The AdaSS premise is regime-specific, exactly as §2 was written to find out.** At rel 1.0 dense
+  steering is 97.9% clean at 0% broken and *no* sparse scheme matches it - at matched perturbation
+  norm, masking removes effect roughly in proportion to what it zeroes (0.90: static 64.6%, grad
+  52.1%, absproj 31.2%, signed 18.8%; 0.99: everything at ~0%). H1's first half fails outright there.
+  At rel 2.0 the picture inverts and `absproj` shows the trade-off the method predicts.
+- **H2 is the strong result, and it is a mechanism claim.** At rel 2.0, `prompt-only` gives **97.9%
+  suppression at 0% broken** where all-positions gives 95.8% at 45.8% broken (clean refusal 97.9% vs
+  52.1%, CIs disjoint). The effect comes from steering the prompt; the damage comes from steering the
+  generated positions. Week 2 reported a position win for a reason that turned out to be
+  apology-then-answer; this one is measured by the judge, on the whole reply.
+- **H3 is not supported, and not by a tie.** JOINT/prompt-only at rel 2.0 suppresses 66.7% where
+  position-only alone suppresses 97.9%, both at 0% broken, CIs disjoint. Adding dimension masking to
+  position gating subtracts effect and buys no coherence, because at that gate there is none left to
+  buy. Week 3's ordering - position-only > joint > mask-only - reproduces at a coherent layer with
+  behavioural instruments, which is the measurement week 3 said it needed.
+
+**Two caveats to carry into the write-up.**
+
+1. **The `H1 SUPPORTED` verdict is the letter of the rule, not its spirit,** and both belong in the
+   record. It rests on 1 of 12 cells: `grad` beating `static` on KL at rel 1.0 with suppression 52.1%
+   against 64.6% - CIs that overlap at n=48, which is what the rule accepts as "matched effect", but
+   a 12.5-point gap is not matched in any substantive sense, and both schemes have lost the effect
+   relative to dense. The pre-registered verdict stands as recorded; the honest summary of H1 is that
+   its first half failed at rel 1.0 and its second half is undecided where it matters.
+2. **The damage ladder is not monotonic and the coherence detector may be why.** Broken runs 0% ->
+   45.8% -> 62.5% -> 29.2% -> 56.2% across rel x1.5 to x4.0, and the substring matcher collapses from
+   100% to 0% at rel x4.0. A repetition detector fitted on layer-16 loops has no reason to track a
+   failure mode that stops being repetitive, so the ladder above rel x2.5 should be read from the
+   generations before any of it is quoted.
