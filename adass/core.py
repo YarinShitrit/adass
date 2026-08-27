@@ -672,6 +672,16 @@ def save_results(obj, name, merge=True, allow_drop=False):
     job that is, rather than every cell as a side effect.
 
     `allow_drop=True` restores the old clobbering behaviour; nothing in the notebook uses it.
+
+    THE THIRD WAY TO LOSE RESULTS, and the reason for `ADASS_MIRROR`. Both failures above are about
+    what one process does to a file. The 27 August run met the other one: every section saved
+    correctly, to `/content/adass/data/results/` on a Colab runtime, and the runtime was recycled
+    with the whole filesystem in it. Merging protects a file; nothing protects a disk that stops
+    existing. Set `ADASS_MIRROR` to a directory on Drive and every save lands there too, so the
+    surviving copy is one runtime death away from nothing rather than zero.
+
+    A mirror that fails is reported and never raised: losing the copy is bad, losing the run that
+    was writing it is worse.
     """
     target = paths.results_path(name)
     name, path, cur = str(target), str(target), {}
@@ -688,6 +698,18 @@ def save_results(obj, name, merge=True, allow_drop=False):
         json.dump(cur, f, indent=2, default=str)
     os.replace(tmp, path)                  # atomic: an interrupted write cannot leave a half-file
     note = f"  (kept {len(dropped)} key(s) from an earlier section: {', '.join(dropped)})" if dropped else ""
+
+    mirror = os.environ.get("ADASS_MIRROR")
+    if mirror:
+        try:
+            import shutil
+            os.makedirs(mirror, exist_ok=True)
+            dst = os.path.join(mirror, os.path.basename(path))
+            shutil.copyfile(path, dst + ".tmp")
+            os.replace(dst + ".tmp", dst)
+            note += f" | mirrored -> {dst}"
+        except Exception as e:              # noqa: BLE001 -- see the docstring
+            note += f" | MIRROR FAILED ({type(e).__name__}: {e})"
     return f"saved: {path}{note}"
 
 
