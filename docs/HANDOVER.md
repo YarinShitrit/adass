@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 24 August 2026
+# Handover - AdaSS, current state as of 27 August 2026
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -7,8 +7,8 @@ the layer sweep and says the opposite of what we now believe.
 > `adass/core.py` and is now the **source** of the module rather than the output of a `%%writefile`
 > cell; data moved under `data/`; documents under `docs/`; notebooks renumbered `01`-`05` under
 > `notebooks/`. Paths in this file that name a bare artifact (`week3_generations.json`) resolve via
-> `adass.artifact("<name>")`. Notebooks 01-04 are archival and marked so; `05_week4_layers.ipynb` is
-> the live one and runs unchanged locally or on Colab. See `README.md` for the layout.
+> `adass.artifact("<name>")`. Notebooks 01-04 are archival and marked so; 05 and 06 have been run;
+> `07_h1_h3_layer10.ipynb` is the live one and runs unchanged locally or on Colab. See `README.md`.
 
 ---
 
@@ -152,7 +152,7 @@ but a control that reads the wrong number is not a control. Fixed to unpack rath
 | Genuine-refusal ceiling ~4% | **Overturned as a general claim.** It was a property of layer 16 |
 | "is it broken" and "did it answer" are each measurable at ~91% | **Solid**, against 160 hand labels |
 | The four-way label is measurable | **No.** Best 69.3%; `refuses` precision never exceeds 0.12 |
-| H1 (adaptive vs static masks), H3 (joint) | **Unresolved.** Never tested in a regime where the model stayed coherent |
+| H1 (adaptive vs static masks), H2 (positions), H3 (joint) | **Unresolved.** Never tested in a regime where the model stayed coherent. `notebooks/07` is that test - written and pre-registered, not yet run |
 | Perplexity detects loops | **Prediction failed.** Loops score *higher* NLL (0.803 vs 0.393), so the literature's one-sided gate is directionally right - just weak (90.6% vs 100% for the mechanical features) |
 
 ## Instruments, and which to trust for what
@@ -275,17 +275,28 @@ Each of these cost us real time in the last two days.
 
 ## Where to go next
 
-1. **Run `notebooks/05` §3-§7 on a GPU.** Written, syntax-checked, and CPU-deferring;
-   §2 has already been run. §3-§5 give the 22 August reversal reproducible code for the first time,
-   §6 settles the confound under a pre-registered rule, §7 leaves a normalised strength axis behind.
-   Needs `transformers>=4.56,<5`; `pip install -e .` pins it.
-2. **~40 blind hand labels at a coherent layer** (12 is the natural choice). No GPU. Until this runs,
-   every layer-10-to-14 number rests on instruments validated only on layer-16 text.
-3. **Re-run H1 and H3 at a coherent layer.** `PLAN_REFUSAL_SUPPRESSION.md` has the phases; the
-   masking machinery in `adass.py` is behaviour- and layer-agnostic and needs no changes. This is now
-   the main line, not the fallback. **Compare at matched relative strength, not matched multiplier** -
-   matched raw multiplier across masking schemes is what made week 2's H1 test unfair, and matched
-   raw multiplier across layers is the same mistake one dimension over.
+**Items 1 and 2 of the previous handover are done** - `notebooks/05` §3-§7 ran on Colab on 24 August
+(§"The confound, settled" above), and `notebooks/06` hand-confirmed the layer-10 operating point with
+42 blind labels (correction 16). What remains:
+
+1. **Run `notebooks/07_h1_h3_layer10.ipynb` on a GPU.** H1, H2 and H3 at layer 10, which is the first
+   time any of them will have been tested in a regime where the model stays coherent. Written,
+   syntax-checked, CPU-deferring, ~1.5 hours on a T4; `ADASS_CONFIRM=1` adds an n=96 pass over
+   whatever §4-§6 decide. Needs `transformers>=4.56,<5`; `pip install -e .` pins it.
+   Three things in it are worth knowing before reading its output:
+   - **The damage axis is at the floor at the operating point.** Dense steering at layer 10 rel 1.0
+     is 100% clean refusal at 0% broken, so a masking comparison run only there returns ties against
+     a ceiling. §2 climbs the relative axis until the model breaks (pre-registered: first factor in
+     {1.5, 2.0, 2.5, 3.0, 4.0} reaching 25% broken) and the hypotheses are decided in both regimes -
+     on coherence where damage exists, on KL where it does not. WORKLOG correction 17.
+   - **Strength is matched exactly, per prompt.** `adass.rel_norm_rows` puts every row of every
+     scheme at the same perturbation norm and steers at multiplier 1.0, so the scaling rule is moot
+     rather than merely documented. Matched raw multiplier across masking schemes is what made week
+     2's H1 test unfair; matched raw multiplier across layers was the same mistake one dimension over.
+   - **KL is windowed for the position schemes.** `kl_vs_base(..., window=W)` averages the first W
+     continuation tokens, because a full-length KL under a `first-k` gate averages mostly base-like
+     positions and reports the reversion as low damage - the mechanism behind week 2's position
+     headline, one metric over. §5 reports both columns; the gap is that asymmetry measured.
 4. **`PLAN_SYCOPHANCY.md`** is the alternative route to the method claim, and is no longer needed as a
    rescue. Keep it: sycophancy's A/B metric cannot be inflated by breakage at all, so it is the
    cleaner venue if the confound turns out badly.
@@ -305,6 +316,8 @@ If you must be selective:
 
 *Code*
 - `adass/` (the package - `core.py` is the source, `paths.py` resolves artifacts)
+- `notebooks/07_h1_h3_layer10.ipynb` (the live one: H1/H2/H3 at layer 10, pre-registered, awaiting a GPU)
+- `notebooks/06_layer10_labels.ipynb` (the 42 blind labels at the new operating point)
 - `notebooks/05_week4_layers.ipynb` (week 4: matcher saturation, the sweep reproduction, the pre-registered
   matched-norm test, the relative-strength grid)
 - `notebooks/04_week3_5_taxonomy.ipynb` (week 3.5, archival, all outputs saved)
@@ -318,6 +331,8 @@ If you must be selective:
 - `refusal_dirs.pt` - the extracted vectors, one per layer
 - `steps123_results.json` - the layer sweep, the selection screen, the repaired judge
 - `week4_layers.json`, `fig_matcher_saturation.png` - week-4 output and the saturation figure
+- `week4_layer10_gold.json` + `week4_layer10_sheet.json` - the 42 layer-10 labels and their sheet,
+  same pairing rule as the original 160
 - `week3_results.json`, `week3_patches.json`, `week3_reference_labels.json` - week-3 outputs
 - `week3_5_taxonomy.json`, `week3_5_judge.json`, `week3_5_internal.json`, `week3_5_judge_v2.json`
 - `adass_config.json`, `requirements.txt`

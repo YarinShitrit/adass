@@ -677,3 +677,54 @@ they carry the same status as the first pass over the original 160 - which a hum
 Confirmation of this sheet has not happened yet. One classifier certifying another is the error this
 project has caught more than once, and the fact that the labeller here knew the hypothesis is a real
 bias risk that the embedded controls limit but do not eliminate.
+
+### 17. Moving the operating point took the damage axis away from H1 and H3
+
+**What we believed.** That correction 15 had cleared the road: with the operating point moved to
+layer 10 at relative strength 1.0, the AdaSS hypotheses could be re-run there as written, the
+masking machinery being behaviour- and layer-agnostic and needing no changes.
+
+**What is actually wrong with that.** H1 and H3 are claims about a *trade-off*: sparsify the
+intervention, keep the effect, lose less output quality. At the new operating point there is no
+quality being lost. Dense steering at layer 10 rel 1.0 scores **100% clean refusal at 0% broken**
+(nb 05 §7, hand-confirmed in nb 06), and still holds 97.9% / 0% at 1.5x. Every masking scheme run
+there can do at best exactly that, so the comparison returns ties against a ceiling — and a tie
+against a ceiling is not evidence for or against either hypothesis. The machinery needed no changes;
+the *experiment* did.
+
+**How it was caught.** Before the run, by writing down what each cell of the planned grid would be
+compared on and noticing that the damage column was already zero for the reference arm.
+
+**What it cost.** Nothing yet, which is the point — this is the first correction in the project that
+was made before the GPU hours rather than after them.
+
+**The fix, and why it is shaped this way.** `notebooks/07_h1_h3_layer10.ipynb` tests the hypotheses
+at two operating points rather than one. §2 climbs the relative axis on dense/all until coherence
+breaks (pre-registered: the smallest factor in {1.5, 2.0, 2.5, 3.0, 4.0} reaching 25% broken) and
+names it `REL_STAR`. H1/H2/H3 then run at rel 1.0, where **KL** is the damage axis with range left,
+and again at `REL_STAR`, where **coherence** has range. Which axis decides a cell is fixed by the
+regime the cell is in, written above the code.
+
+**And the outcome that is about the premise rather than the hypotheses.** If layer 10 never breaks
+on that ladder and no sparse scheme lowers KL at matched effect, the finding is that *at an
+operating point selected on evidence, dense activation addition costs no measurable coherence* --
+so the motivation for sparsifying it does not hold here. That is pre-registered too, and it is
+recorded in two grains: `nothing_to_recover_at_op` and `nothing_to_recover_anywhere`. The narrow
+flag must not be reported as the broad one. Reading a property of a single operating point as a
+property of the method is the week-3.5 error exactly, and it is available to be made again.
+
+**Two smaller things the same pass fixed.**
+
+- **Strength matching is now exact, per prompt.** `apply_scaling(..., "match_norm")` restores
+  `||V||` after masking, but week 2 then compared at a matched *multiplier*, and different methods
+  lose different amounts of length -- static keeps 68.9% of `||V||` by construction against the
+  adaptive scores' 55.7-56.8%, so adaptive was steered 1.76-1.80x against static's 1.45x, by a
+  different factor per prompt. `adass.rel_norm_rows` sets every row of every scheme to the same
+  perturbation norm `rel * ||h||` and steers at multiplier 1.0, which makes the scaling rule moot
+  rather than merely documented.
+- **KL can now be windowed.** `kl_vs_base(..., window=W)` averages over the first W continuation
+  tokens instead of all of them. Under a `first-k` gate the steering is off for most of a 128-token
+  continuation, so a full-length KL averages mostly base-like positions and reports the *reversion*
+  as low damage -- the mechanism behind week 2's position headline, one metric over. A window shared
+  by every position scheme puts them on the same footing; notebook 07 §5 reports both columns, and
+  the gap between them is that asymmetry measured rather than argued.

@@ -292,13 +292,44 @@ def rel_mult_for(V, rel, h_norm):
     return float(rel) * float(h_norm) / float(V.norm())
 
 
+def rel_norm_rows(V, rel, h_norm):
+    """Rescale V so that EVERY row is a perturbation of exactly `rel` times ||h||, multiplier 1.0.
+
+    THE WEEK-2 CONFOUND, DISSOLVED RATHER THAN COMPENSATED FOR. Masking shortens a vector, and by
+    a different amount for every method and every prompt: at sparsity 0.90 the static mask keeps
+    68.9% of ||V|| (it selects the largest components by construction) while the adaptive ones
+    keep 55.7-56.8%. Week 2 rescaled with `apply_scaling(..., "match_norm")` and then compared at
+    a matched MULTIPLIER, which meant adaptive masks were pushed 1.76-1.80x against static's
+    1.45x -- so its H1 test could not have been fair whichever method is genuinely better.
+
+    `apply_scaling` restores ||V||; this restores the quantity the layer work showed actually
+    parameterises the intervention, ||m*v|| / ||h||, and it does so per prompt rather than on
+    average. Under it the choice of scaling rule is moot: every row lands on the same target norm
+    whatever rule produced it, so `rule="none"` and `rule="match_norm"` give identical vectors.
+    Pass the result to `generate()`/`kl_vs_base()` with `mult=1.0`.
+
+    V : [d] or [N, d] (per-prompt, which is what adaptive masking produces).
+    """
+    target = float(rel) * float(h_norm)
+    if V.dim() == 1:
+        return V * (target / float(V.norm()))
+    return V * (target / V.norm(dim=-1, keepdim=True).clamp(min=1e-12))
+
+
+def retained_norm_frac(V, mask):
+    """||V*mask|| / ||V|| -- how much of the vector a mask keeps. The diagnostic behind the above."""
+    return float((V * mask).norm()) / float(V.norm())
+
+
 def strength_row(V, mult, h_norm=None):
     """Every strength parameterisation of one (vector, multiplier), for the results tables.
 
     Recording all of them per row is deliberate: the confound above survived three weeks because
     the tables carried `mult` alone, and `mult` alone is not an intervention strength.
     """
-    n = float(V.norm())
+    # Mean ROW norm for a per-prompt [N, d] vector -- V.norm() on a 2-D tensor is the Frobenius
+    # norm, which is sqrt(N) times too large and would silently misreport every adaptive row.
+    n = float(V.norm()) if V.dim() == 1 else float(V.norm(dim=-1).mean())
     row = dict(raw_mult=float(mult), vec_norm=n, pert_norm=float(mult) * n,
                norm_mult=float(mult) * n / NORM_REF)
     if h_norm:
@@ -457,12 +488,21 @@ def nll_under_base(model, tok, to_chat, prompts, gen_ids, device=DEFAULT_DEVICE)
 @torch.no_grad()
 def kl_vs_base(model, tok, to_chat, prompts, ref_texts, layer, vector, mult,
                positions="all", adaptive=None, device=DEFAULT_DEVICE, dtype=DEFAULT_DTYPE,
-               batch_size=8, per_prompt=False):
+               batch_size=8, per_prompt=False, window=None):
     """Mean KL(steered || base) over a FIXED reference text, shared by every config.
 
     Week 1 teacher-forced on each config's own generations, so the measurement text moved
     with the config. Scoring every config on the same unsteered reference makes KL genuinely
     text-independent and therefore comparable across the sweep.
+
+    `window` : average over the first `window` continuation tokens only, instead of all of them.
+        THIS IS THE FIX FOR THE POSITION ASYMMETRY (week 3 §5.3, ONBOARDING §5.3). Under a
+        `first-k` gate the steering is OFF over most of a 128-token continuation, so a full-length
+        KL averages mostly base-like positions and reports the *reversion* as low damage -- which
+        is exactly how "steer the first 4 tokens, same effect, better quality" survived a week
+        before somebody read the generations and found apology-then-answer. A window shared by
+        every configuration makes the position schemes comparable on the same footing; set it to
+        the widest gate you are comparing, and it is a no-op for `positions="all"`.
     """
     vals = []
     for i in range(0, len(prompts), batch_size):
@@ -482,6 +522,9 @@ def kl_vs_base(model, tok, to_chat, prompts, ref_texts, layer, vector, mult,
         lp_b, lp_s = torch.log_softmax(base, -1), torch.log_softmax(st, -1)
         kl = F.kl_div(lp_b, lp_s, log_target=True, reduction="none").sum(-1)  # KL(steered||base)
         m = b["cont_mask"]
+        if window is not None:
+            keep = torch.arange(m.shape[1], device=m.device) < int(window)
+            m = m * keep[None, :].to(m.dtype)
         vals += (kl * m).sum(1).div(m.sum(1).clamp(min=1)).cpu().tolist()
     return vals if per_prompt else (sum(vals) / max(len(vals), 1))
 

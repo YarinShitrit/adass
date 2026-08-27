@@ -28,9 +28,16 @@ than steering it. The metric failure and the operating-point failure are one bug
 
 ![The selection metric is flat where the behaviour changes](figures/fig_matcher_saturation.png)
 
-**Still open:** `‖v‖` grows 6.2× with depth and the multiplier scales the raw vector, so depth and
-strength are confounded in every layer comparison the project has made. `notebooks/05` §6 is the
-pre-registered test that separates them. Both outcomes leave the finding above intact.
+**Settled since, on 24 August.** The depth/strength confound that hung over every layer comparison
+came back **two-dimensional**: turning layer 16 down produces no effect rather than clean refusals,
+and pushing shallow layers up to layer 16's norm does not break them the same way. What depth buys is
+*tolerance* — how hard you can steer before the model stops working. On the dimensionless axis, layer
+10 reaches 100% clean refusal at 0% broken and still holds at 1.5×; layer 16 has no setting that is
+both. The operating point is now **layer 10 at relative strength 1.0**, hand-confirmed by 42 blind
+labels in `notebooks/06`. `notebooks/05` §6–§7 and `docs/HANDOVER.md` have it in full.
+
+**Open now:** H1, H2 and H3 have still never been tested in a regime where the model stays coherent.
+`notebooks/07_h1_h3_layer10.ipynb` is that test, written and pre-registered but not yet run.
 
 ---
 
@@ -48,12 +55,12 @@ python -c "import adass; print(adass.env.status()); print(adass.pick_device(), a
 Expect `cuda torch.bfloat16` or `mps torch.bfloat16`. **If it prints `float16`, stop** — Gemma-2
 emits broken text in fp16, and that failure looks exactly like the degeneration this project studies.
 
-Then open `notebooks/05_week4_layers.ipynb`. Its bootstrap cell finds the repo root by walking up
-from wherever the kernel started, so the working directory does not matter.
+Then open `notebooks/07_h1_h3_layer10.ipynb` — the live one. Its bootstrap cell finds the repo root
+by walking up from wherever the kernel started, so the working directory does not matter.
 
 ### Colab
 
-Open `notebooks/05_week4_layers.ipynb`, set `GITHUB_REPO = "your-username/adass"` in the bootstrap
+Open `notebooks/07_h1_h3_layer10.ipynb`, set `GITHUB_REPO = "your-username/adass"` in the bootstrap
 cell, and run it. It clones the repo, installs the package, and resolves credentials.
 
 **The `.env` catch, which is worth understanding once.** `.env` is gitignored, so a `git clone` on
@@ -106,7 +113,9 @@ adass/
 │   ├── 02_week2_adaptive.ipynb      │ ARCHIVAL — the historical record.
 │   ├── 03_week3_validation.ipynb    │ Read, do not re-run.
 │   ├── 04_week3_5_taxonomy.ipynb    ┘
-│   └── 05_week4_layers.ipynb        LIVE — runs locally or on Colab unchanged
+│   ├── 05_week4_layers.ipynb        the layer sweep, the confound, the relative axis — RUN
+│   ├── 06_layer10_labels.ipynb      42 blind labels at the new operating point — RUN, no GPU
+│   └── 07_h1_h3_layer10.ipynb       LIVE — H1/H2/H3 at layer 10. Written, not yet run
 ├── data/
 │   ├── gold/               the 160 hand labels + the blind sheet. IRREPLACEABLE, and only
 │   │                       meaningful as a pair — labels are keyed by sid
@@ -143,17 +152,23 @@ finds it wherever it lives, and `adass.save_results(obj, "week4_layers.json")` w
 
 ## What to pick up first
 
-1. **Run `notebooks/05` §3–§7 on a GPU.** §2 is already run. §3–§5 give the 22 August reversal
-   reproducible code for the first time — `steps123_results.json` was produced in a session that was
-   never saved, and no cell anywhere writes it. §6 settles the strength/depth confound under a rule
-   written above the code. §7 leaves a normalised strength axis behind. About an hour on a T4.
-2. **~40 blind hand labels at a coherent layer** (12 is the natural choice). No GPU. All 160 existing
-   gold labels come from layer-16 conditions, so both instruments are currently used
-   out-of-distribution wherever the coherent regime is measured. Until this runs, no layer-10-to-14
-   number is hand-confirmed.
-3. **H1 and H3 at a coherent layer**, per `docs/PLAN_REFUSAL_SUPPRESSION.md`. The masking machinery
-   is behaviour- and layer-agnostic and needs no changes. **Compare at matched relative strength**,
-   not matched multiplier — matched raw multiplier is what made week 2's H1 test unfair.
+**Done since the last handover, so do not redo them:** `notebooks/05` §3–§7 ran on Colab on 24
+August (the confound is settled and the operating point moved to layer 10), and `notebooks/06`
+hand-confirmed that operating point with 42 blind labels.
+
+1. **Run `notebooks/07_h1_h3_layer10.ipynb` on a GPU.** The main line: H1, H2 and H3 at layer 10,
+   every scheme compared at exactly matched relative strength, ranked on behaviour rather than on
+   `refusal_margin`. Written, syntax-checked, CPU-deferring, every decision rule pre-registered above
+   its code. ~1.5 hours on a T4; `ADASS_CONFIRM=1` adds an n=96 confirmation pass.
+   §2 exists because of the trap below.
+2. **Know what §2 is for before you read the results.** At the layer-10 operating point dense
+   steering is already 100% clean refusal at **0% broken**, so the damage axis H1 and H3 are about
+   has no range there and every scheme ties at the ceiling. §2 climbs the relative axis until the
+   model breaks and the hypotheses are decided in *both* regimes — coherence where damage exists,
+   KL where it does not. `docs/WORKLOG.md` correction 17 has the reasoning.
+3. **Fold the reversal into the write-up.** The measurement result is the headline — the saturated
+   selection metric — and the layer reversal is its demonstration. The "phenomenon is absent"
+   framing from week 3.5 must go wherever it still appears.
 
 ---
 
