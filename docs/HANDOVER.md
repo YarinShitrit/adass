@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 27 August 2026
+# Handover - AdaSS, current state as of 29 August 2026
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -152,7 +152,9 @@ but a control that reads the wrong number is not a control. Fixed to unpack rath
 | Genuine-refusal ceiling ~4% | **Overturned as a general claim.** It was a property of layer 16 |
 | "is it broken" and "did it answer" are each measurable at ~91% | **Solid**, against 160 hand labels |
 | The four-way label is measurable | **No.** Best 69.3%; `refuses` precision never exceeds 0.12 |
-| H1 (adaptive vs static masks), H2 (positions), H3 (joint) | **Unresolved.** Never tested in a regime where the model stayed coherent. `notebooks/07` is that test - written and pre-registered, not yet run |
+| **H2** - position sparsity | **Supported, and it is a mechanism claim.** At layer 10, rel x2.0, steering the prompt positions alone gives 97.9% suppression at **0% broken** where all-positions gives 95.8% at 45.8% broken; clean-refusal intervals disjoint. The effect comes from steering the prompt, the damage from steering the generated positions. Survived a manual read of every candidate reversion (WORKLOG 19) |
+| **H3** - the joint method | **Rejected.** Joint suppresses 62.5% where position gating alone gives 97.9%, both at 0% broken, intervals disjoint. Week 3's ordering - position-only > joint > mask-only - reproduces at a coherent layer with behavioural instruments |
+| **H1** - adaptive vs static masks | **Open on its own axis, strong on the neighbouring one.** On the pre-registered axis (clean refusal at rel x2.0) absproj vs static is undecided at n=96, pooled and held-out. On the damage axis at n=96 absproj breaks 18.8% against dense's 42.7% and static's 41.7% - disjoint against both, suppression indistinguishable. WORKLOG 19 |
 | Perplexity detects loops | **Prediction failed.** Loops score *higher* NLL (0.803 vs 0.393), so the literature's one-sided gate is directionally right - just weak (90.6% vs 100% for the mechanical features) |
 
 ## Instruments, and which to trust for what
@@ -275,34 +277,34 @@ Each of these cost us real time in the last two days.
 
 ## Where to go next
 
-**Items 1 and 2 of the previous handover are done** - `notebooks/05` §3-§7 ran on Colab on 24 August
-(§"The confound, settled" above), and `notebooks/06` hand-confirmed the layer-10 operating point with
-42 blind labels (correction 16). What remains:
+**Notebook 07 has run twice.** Once on 27 August, whose results file was lost with the Colab runtime
+(its tables are transcribed in WORKLOG 18's appendix), and once on 29 August with the corrected joint
+arm and the n=96 confirmation - reproducing the first run cell for cell to within the transcription's
+rounding. `week5_h1h3.json` and `fig_h1_frontier.png` are on disk. The state of each hypothesis is in
+the table above. What remains:
 
-1. **Run `notebooks/07_h1_h3_layer10.ipynb` on a GPU.** H1, H2 and H3 at layer 10, which is the first
-   time any of them will have been tested in a regime where the model stays coherent. Written,
-   syntax-checked, CPU-deferring, ~1.5 hours on a T4; `ADASS_CONFIRM=1` adds an n=96 pass over
-   whatever §4-§6 decide. Needs `transformers>=4.56,<5`; `pip install -e .` pins it.
-   Three things in it are worth knowing before reading its output:
-   - **The damage axis is at the floor at the operating point.** Dense steering at layer 10 rel 1.0
-     is 100% clean refusal at 0% broken, so a masking comparison run only there returns ties against
-     a ceiling. §2 climbs the relative axis until the model breaks (pre-registered: first factor in
-     {1.5, 2.0, 2.5, 3.0, 4.0} reaching 25% broken) and the hypotheses are decided in both regimes -
-     on coherence where damage exists, on KL where it does not. WORKLOG correction 17.
-   - **Strength is matched exactly, per prompt.** `adass.rel_norm_rows` puts every row of every
-     scheme at the same perturbation norm and steers at multiplier 1.0, so the scaling rule is moot
-     rather than merely documented. Matched raw multiplier across masking schemes is what made week
-     2's H1 test unfair; matched raw multiplier across layers was the same mistake one dimension over.
-   - **KL is windowed for the position schemes.** `kl_vs_base(..., window=W)` averages the first W
-     continuation tokens, because a full-length KL under a `first-k` gate averages mostly base-like
-     positions and reports the reversion as low damage - the mechanism behind week 2's position
-     headline, one metric over. §5 reports both columns; the gap is that asymmetry measured.
-4. **`PLAN_SYCOPHANCY.md`** is the alternative route to the method claim, and is no longer needed as a
-   rescue. Keep it: sycophancy's A/B metric cannot be inflated by breakage at all, so it is the
-   cleaner venue if the confound turns out badly.
-5. **Fold the reversal into the write-up.** The measurement result stands; the "phenomenon is absent"
-   framing must go, and the headline is now the saturated-selection finding above rather than the
-   layer reversal, which becomes its demonstration.
+1. **Re-register the damage axis, then test it on prompts neither half has seen.** H1's strongest
+   evidence is one axis away from what was pre-registered: at n=96, per-input `absproj` masking at
+   90% sparsity holds dense's suppression (93.8% against 96.9%) while breaking **18.8%** against
+   dense's 42.7% and static's 41.7% - disjoint against both. The pre-registered axis, clean refusal,
+   is undecided pooled and held-out. Write the damage-axis test down first; `make_splits` extends
+   without moving anything, and the two runs have used `harmless_test[:96]`, so `test_n=144` gives 48
+   genuinely unseen prompts.
+2. **Blind hand labels at `prompt-only`,** the condition carrying H2. No GPU. A manual read has been
+   done and the judge came out of it well - 1 of 48 scored answered at rel x2.0, and the replies that
+   offer to answer anyway offer resources on an adjacent topic rather than the thing asked - but a
+   read that knows the hypothesis is not a blind pass, and H2 is now the project's headline method
+   claim. `notebooks/06` is the template; the machinery needs no changes.
+3. **Read the ladder above rel x2.5 before quoting any of it.** Breakage runs 45.8% -> 62.5% -> 29.2%
+   -> 56.2% across rel x2.0 to x4.0 and the substring matcher collapses to 0% at x4.0. A repetition
+   detector fitted on layer-16 loops has no reason to track a failure mode that stops being
+   repetitive. The generations are in `week5_h1h3.json` under `s2_damage_onset`; this is CPU work.
+4. **`PLAN_SYCOPHANCY.md`** is the alternative route to a method claim and is no longer needed as a
+   rescue. Keep it: sycophancy's A/B metric cannot be inflated by breakage at all.
+5. **Write it up.** The headline is the saturated selection metric; the layer reversal is its
+   demonstration; H2's prompt-versus-generation split is the method contribution and the cleanest
+   positive result the project has. State the arXiv:2606.13720 priority explicitly. The "phenomenon
+   is absent" framing must go wherever it still appears.
 
 ## Files to send
 
