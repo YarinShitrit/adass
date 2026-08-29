@@ -283,6 +283,11 @@ arm and the n=96 confirmation - reproducing the first run cell for cell to withi
 rounding. `week5_h1h3.json` and `fig_h1_frontier.png` are on disk. The state of each hypothesis is in
 the table above. What remains:
 
+**`notebooks/08_mechanism.ipynb` is written and covers items 1 and 3 below, plus the CE metric.**
+About an hour on a T4; both decision rules are fixed above their code and were dry-run against
+synthetic results in every direction they can land. §2 is the `gen_only` control, §3 is
+cross-entropy over harmless data, §4 is the fresh-prompt damage test.
+
 1. **Re-register the damage axis, then test it on prompts neither half has seen.** H1's strongest
    evidence is one axis away from what was pre-registered: at n=96, per-input `absproj` masking at
    90% sparsity holds dense's suppression (93.8% against 96.9%) while breaking **18.8%** against
@@ -295,13 +300,17 @@ the table above. What remains:
    offer to answer anyway offer resources on an adjacent topic rather than the thing asked - but a
    read that knows the hypothesis is not a blind pass, and H2 is now the project's headline method
    claim. `notebooks/06` is the template; the machinery needs no changes.
-3. **Read the ladder above rel x2.5 before quoting any of it.** Breakage runs 45.8% -> 62.5% -> 29.2%
+3. **Run `gen_only`, the missing arm of H2's mechanism claim** (notebook 08 §2). Removing
+   generation-time steering removed the damage; that generation-time steering *causes* the damage
+   has never been measured, and an interaction story fits the same data. Three outcomes are named
+   in advance so whichever lands was not chosen afterwards.
+4. **Read the ladder above rel x2.5 before quoting any of it.** Breakage runs 45.8% -> 62.5% -> 29.2%
    -> 56.2% across rel x2.0 to x4.0 and the substring matcher collapses to 0% at x4.0. A repetition
    detector fitted on layer-16 loops has no reason to track a failure mode that stops being
    repetitive. The generations are in `week5_h1h3.json` under `s2_damage_onset`; this is CPU work.
-4. **`PLAN_SYCOPHANCY.md`** is the alternative route to a method claim and is no longer needed as a
+5. **`PLAN_SYCOPHANCY.md`** is the alternative route to a method claim and is no longer needed as a
    rescue. Keep it: sycophancy's A/B metric cannot be inflated by breakage at all.
-5. **Write it up.** The headline is the saturated selection metric; the layer reversal is its
+6. **Write it up.** The headline is the saturated selection metric; the layer reversal is its
    demonstration; H2's prompt-versus-generation split is the method contribution and the cleanest
    positive result the project has. State the arXiv:2606.13720 priority explicitly. The "phenomenon
    is absent" framing must go wherever it still appears.
