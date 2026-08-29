@@ -868,3 +868,67 @@ apology-then-answer - the exact pattern that killed week 2's position headline -
 condition that produces this notebook's strongest result. The judge scored this condition at 85.4%
 suppression, so it is catching most of it; whether it catches this item is not knowable from the
 printed output alone, and that is precisely what a blind label pass at `prompt-only` would settle.
+
+### 19. The re-run, the confirmation, and what the held-out half was for
+
+**The re-run reproduced the lost run exactly.** Every cell of the damage ladder, the H1 grid and the
+position table matched the transcribed appendix above to within 0.1 points, which is the rounding in
+the transcription rather than a difference in the numbers. Same seed, same splits, same dtype
+(bfloat16 on a T4 again), greedy decoding: deterministic given identical numerics, and it was. The
+appendix has served its purpose and the artifact it stands in for, `week5_h1h3.json`, is now on disk.
+
+**The joint arm, rebuilt on `absproj`, changes nothing about H3.** At rel x2.0 the joint method
+suppresses **62.5%** where position gating alone suppresses **97.9%**, both at 0% broken. Rebuilding
+it from the mask that wins where damage exists made it *worse* than the `grad` arm it replaced
+(66.7%), which is about as clean a refutation as the hypothesis can get: dimension masking on top of
+position gating subtracts effect and buys no coherence at a gate that already has none to buy.
+
+**The confirmation, n=96 at rel x2.0, and the half it was worth reporting separately.**
+
+| | clean refusal, pooled n=96 | clean refusal, held-out n=48 | broken, pooled | suppressed, pooled |
+|---|---|---|---|---|
+| dense | 56.2% | 60.4% | 42.7% | 96.9% |
+| static-0.90 | 57.3% | 52.1% | 41.7% | 96.9% |
+| **absproj-0.90** | **76.0%** | **70.8%** | **18.8%** | 93.8% |
+
+On the **pre-registered primary axis** (clean refusal, in the damage regime) the result is *not*
+decided: absproj against static is undecided pooled - [0.666, 0.835] against [0.473, 0.667], which
+miss by a thousandth - and undecided on the held-out half. Against dense it is decided pooled and
+undecided held-out. So H1's second half remains formally open, and that is the verdict.
+
+**The held-out half earned its place immediately.** The cell that motivated the escalation read
+81.2% clean at n=48; on 48 prompts nothing had been selected on it reads **70.8%**. The direction
+survived, ten points of it did not, and that gap is exactly the winner's curse the screening design
+is exposed to. Reporting the halves separately is what made it visible rather than absorbed into a
+pooled number.
+
+**On the damage axis - which is not the pre-registered axis, and is reported as an observation
+rather than a verdict** - the picture is sharper than the primary one. At n=96, `absproj-0.90` breaks
+**18.8%** [0.122, 0.277] against dense's 42.7% [0.333, 0.527] and static's 41.7% [0.323, 0.517]:
+disjoint against **both**, while suppression stays statistically indistinguishable (93.8% against
+96.9%). That is the AdaSS claim in its original form - same effect, half the damage, from choosing
+dimensions per input - and it is the strongest evidence the project has produced for H1. It is also
+one axis away from what was pre-registered, so it is written here as what it is: a result to
+re-register and test directly, not a verdict to claim. On the held-out 48 alone the same ordering
+holds with intervals that overlap, n=48 being exactly the size that cannot separate them.
+
+**H2 survived a reading, which is the check it needed.** The judge called 1 of 48 replies answered at
+`prompt-only/rel x2.0`. Reading every reply there that contains an explicit offer to answer anyway -
+five of them - the other four offer *resources on an adjacent topic* (FDA links for a recipe request,
+"car mechanics or cybersecurity" for a driving question) rather than the thing that was asked, which
+is correctly scored as not answered. At rel x1.0 the judge called 7 answered and all seven are
+genuine apology-then-answer, the week-2 failure mode verbatim: refuse, moralise, *"However, I can
+offer..."*, then answer in full. Nine further replies there contain an offer phrase and were scored
+not-answered; most offer adjacent resources, two or three are borderline. So the headline cell holds
+up to manual reading and the weaker rel x1.0 cell is roughly right and possibly a little optimistic.
+This is not a substitute for a blind label pass, which is still worth running, but it is no longer
+true that H2 rests on the judge alone.
+
+**A bookkeeping gap in the H3 rule, recorded rather than quietly fixed.** `better()` returns
+"undecided - effects differ" whenever both cells sit at 0% broken and their suppression intervals are
+disjoint, on the grounds that a KL comparison between different effect sizes is meaningless. That is
+right for KL and wrong for the summary: a configuration with strictly less suppression at identical
+(zero) breakage is dominated, not tied, so the verdict line reports "0 lost" where "loses" is the
+truth. The verdict itself - H3 NOT SUPPORTED - is unaffected either way. Flagged here rather than
+patched mid-analysis, because the rule was pre-registered and the honest move is to say what it
+under-counts.
