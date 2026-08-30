@@ -116,8 +116,11 @@ adass/
 │   ├── 05_week4_layers.ipynb        the layer sweep, the confound, the relative axis — RUN
 │   ├── 06_layer10_labels.ipynb      42 blind labels at the new operating point — RUN, no GPU
 │   ├── 07_h1_h3_layer10.ipynb       H1/H2/H3 at layer 10 — RUN twice, reproduced cell for cell
-│   └── 08_mechanism.ipynb           LIVE — the gen_only control, CE on harmless data, H1 on
-│                                    unseen prompts. Written, not yet run (~1h)
+│   ├── 08_mechanism.ipynb           gen_only, CE on harmless data, H1 on unseen prompts — RUN
+│   ├── 09_labels_prompt_vs_gen.ipynb  LIVE — 108 blind labels deciding H2, and the threshold
+│   │                                re-fit they pay for. No GPU, ~2h of labelling
+│   └── 10_registered_mechanism.ipynb  LIVE — the mechanism claim as a registered test on 48
+│                                    unseen prompts. ~10 min on a GPU
 ├── data/
 │   ├── gold/               the 160 hand labels + the blind sheet. IRREPLACEABLE, and only
 │   │                       meaningful as a pair — labels are keyed by sid
@@ -158,18 +161,15 @@ finds it wherever it lives, and `adass.save_results(obj, "week4_layers.json")` w
 August (the confound is settled and the operating point moved to layer 10), and `notebooks/06`
 hand-confirmed that operating point with 42 blind labels.
 
-1. **Run `notebooks/08_mechanism.ipynb` on a GPU** — about an hour, three experiments, both
-   decision rules written above their code:
-   - **§2** runs `gen_only`, the arm H2's mechanism claim is missing. Notebook 07 showed that
-     removing generation-time steering removes the damage; nothing has yet shown that
-     generation-time steering *causes* it. Three named outcomes, fixed in advance.
-   - **§3** puts the position schemes on **cross-entropy over harmless data** — Arditi et al.'s own
-     damage metric, the one the field used to justify abandoning activation addition. This project
-     has never reported it.
-   - **§4** re-registers H1's damage axis and tests it on the 48 prompts of `test_n=144` that no
-     run, mask, threshold or selection step has ever seen.
-2. **Then the blind labels at `prompt-only`.** No GPU. A manual read of that condition went well
-   (WORKLOG 19) but it knew the hypothesis, and H2 is now the headline method claim.
+1. **`notebooks/09_labels_prompt_vs_gen.ipynb` — no GPU, and it gates the rest.** 108 blind labels
+   over both claim conditions in full, plus two controls. It settles H2 on human labels *and*
+   supplies the broken anchors the coherence detector needs re-fitting with — its thresholds were
+   fitted on layer-16 repetition loops and gen-only produces a failure mode that clears all three
+   while sitting just under each (WORKLOG 20).
+2. **`notebooks/10_registered_mechanism.ipynb` — ~10 minutes on a GPU.** The mechanism claim as a
+   registered test rather than a repaired one: the rule is written on clean refusal before the run,
+   and it runs on the 48 prompts of `test_n=144` nothing has touched. It picks up notebook 09's
+   re-fitted thresholds automatically if they exist, and reports both threshold sets either way.
 3. **Fold it into the write-up.** The measurement result is the headline — the saturated selection
    metric — with the layer reversal as its demonstration and H2's prompt-versus-generation split as
    the method contribution. The "phenomenon is absent" framing from week 3.5 must go wherever it

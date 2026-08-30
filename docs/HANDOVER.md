@@ -288,6 +288,10 @@ the table above. What remains:
 prompts - see WORKLOG 20-22, and note that two of those three are corrections to how the questions
 were asked rather than to the answers. `week6_mechanism.json` is on disk.
 
+0. **Two notebooks are written and waiting: `09_labels_prompt_vs_gen` (no GPU, ~2h of labelling)
+   and `10_registered_mechanism` (~10 min GPU).** 09 gates the rest - it produces both the hand
+   labels H2 needs and the anchors the detector needs; 10 turns WORKLOG 20's correction into a
+   registered test on unseen prompts, and picks up 09's thresholds automatically if they exist.
 1. **Re-fit the mechanical thresholds with `gen_only` text in the broken anchor set.** They were
    fitted on layer-16 repetition loops, and `gen_only` produces a different failure mode - apology
    loops with enough surface variation to sit just under every threshold (WORKLOG 20). Until that is
