@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 29 August 2026
+# Handover - AdaSS, current state as of 30 August 2026
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -152,9 +152,9 @@ but a control that reads the wrong number is not a control. Fixed to unpack rath
 | Genuine-refusal ceiling ~4% | **Overturned as a general claim.** It was a property of layer 16 |
 | "is it broken" and "did it answer" are each measurable at ~91% | **Solid**, against 160 hand labels |
 | The four-way label is measurable | **No.** Best 69.3%; `refuses` precision never exceeds 0.12 |
-| **H2** - position sparsity | **Supported, and it is a mechanism claim.** At layer 10, rel x2.0, steering the prompt positions alone gives 97.9% suppression at **0% broken** where all-positions gives 95.8% at 45.8% broken; clean-refusal intervals disjoint. The effect comes from steering the prompt, the damage from steering the generated positions. Survived a manual read of every candidate reversion (WORKLOG 19) |
+| **H2** - position sparsity | **Supported as a practical claim; its mechanism restated.** Prompt-only gating gives 97.9% suppression at **0% broken** where all-positions gives 95.8% at 45.8%, and prompt-only's coherence features are indistinguishable from unsteered text. But `gen_only` also suppresses (93.8%) - so the effect is not exclusive to the prompt; what is exclusive is the *absence of damage*. WORKLOG 20 |
 | **H3** - the joint method | **Rejected.** Joint suppresses 62.5% where position gating alone gives 97.9%, both at 0% broken, intervals disjoint. Week 3's ordering - position-only > joint > mask-only - reproduces at a coherent layer with behavioural instruments |
-| **H1** - adaptive vs static masks | **Open on its own axis, strong on the neighbouring one.** On the pre-registered axis (clean refusal at rel x2.0) absproj vs static is undecided at n=96, pooled and held-out. On the damage axis at n=96 absproj breaks 18.8% against dense's 42.7% and static's 41.7% - disjoint against both, suppression indistinguishable. WORKLOG 19 |
+| **H1** - adaptive vs static masks | **Not supported.** Undecided on its pre-registered axis at n=96; on the damage axis it did **not** replicate on 48 unseen prompts (27.1% broken against dense's 37.5%, intervals overlapping) and the gap halved from the screening estimate. Consistent direction everywhere, never once decided on prompts it was not chosen on. WORKLOG 22 |
 | Perplexity detects loops | **Prediction failed.** Loops score *higher* NLL (0.803 vs 0.393), so the literature's one-sided gate is directionally right - just weak (90.6% vs 100% for the mechanical features) |
 
 ## Instruments, and which to trust for what
@@ -283,27 +283,28 @@ arm and the n=96 confirmation - reproducing the first run cell for cell to withi
 rounding. `week5_h1h3.json` and `fig_h1_frontier.png` are on disk. The state of each hypothesis is in
 the table above. What remains:
 
-**`notebooks/08_mechanism.ipynb` is written and covers items 1 and 3 below, plus the CE metric.**
-About an hour on a T4; both decision rules are fixed above their code and were dry-run against
-synthetic results in every direction they can land. §2 is the `gen_only` control, §3 is
-cross-entropy over harmless data, §4 is the fresh-prompt damage test.
+**`notebooks/08_mechanism.ipynb` ran on 30 August** (A100, bfloat16, gate passed). It answered the
+`gen_only` question, put the position schemes on cross-entropy, and tested H1's damage axis on unseen
+prompts - see WORKLOG 20-22, and note that two of those three are corrections to how the questions
+were asked rather than to the answers. `week6_mechanism.json` is on disk.
 
-1. **Re-register the damage axis, then test it on prompts neither half has seen.** H1's strongest
-   evidence is one axis away from what was pre-registered: at n=96, per-input `absproj` masking at
-   90% sparsity holds dense's suppression (93.8% against 96.9%) while breaking **18.8%** against
-   dense's 42.7% and static's 41.7% - disjoint against both. The pre-registered axis, clean refusal,
-   is undecided pooled and held-out. Write the damage-axis test down first; `make_splits` extends
-   without moving anything, and the two runs have used `harmless_test[:96]`, so `test_n=144` gives 48
-   genuinely unseen prompts.
+1. **Re-fit the mechanical thresholds with `gen_only` text in the broken anchor set.** They were
+   fitted on layer-16 repetition loops, and `gen_only` produces a different failure mode - apology
+   loops with enough surface variation to sit just under every threshold (WORKLOG 20). Until that is
+   done, `gen_only`'s 31.2% broken is a floor, not an estimate, and any claim resting on the size of
+   the prompt-versus-generation damage gap inherits the same slack. CPU work: the generations are in
+   `week6_mechanism.json`, and re-fitting needs a labelled broken set, which is the same blind pass
+   as item 2.
 2. **Blind hand labels at `prompt-only`,** the condition carrying H2. No GPU. A manual read has been
    done and the judge came out of it well - 1 of 48 scored answered at rel x2.0, and the replies that
    offer to answer anyway offer resources on an adjacent topic rather than the thing asked - but a
    read that knows the hypothesis is not a blind pass, and H2 is now the project's headline method
    claim. `notebooks/06` is the template; the machinery needs no changes.
-3. **Run `gen_only`, the missing arm of H2's mechanism claim** (notebook 08 §2). Removing
-   generation-time steering removed the damage; that generation-time steering *causes* the damage
-   has never been measured, and an interaction story fits the same data. Three outcomes are named
-   in advance so whichever lands was not chosen afterwards.
+3. **Re-register §2's rule on clean refusal and re-run the comparison.** The rule as written tested
+   redundancy on *suppression*, which cannot separate refusing from breaking; on clean refusal the
+   same data separates `prompt_only` from `gen_only` decisively. The corrected comparison is recorded
+   in WORKLOG 20 as a correction, deliberately not as a verdict, and it needs registering before it
+   can be cited.
 4. **Read the ladder above rel x2.5 before quoting any of it.** Breakage runs 45.8% -> 62.5% -> 29.2%
    -> 56.2% across rel x2.0 to x4.0 and the substring matcher collapses to 0% at x4.0. A repetition
    detector fitted on layer-16 loops has no reason to track a failure mode that stops being

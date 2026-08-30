@@ -932,3 +932,141 @@ right for KL and wrong for the summary: a configuration with strictly less suppr
 truth. The verdict itself - H3 NOT SUPPORTED - is unaffected either way. Flagged here rather than
 patched mid-analysis, because the rule was pre-registered and the honest move is to say what it
 under-counts.
+
+### 20. The dissociation rule asked the wrong axis, and the answer changes when it asks the right one
+
+**What was run.** `notebooks/08_mechanism.ipynb`, 30 August, Colab A100, bfloat16, n=48 per cell. The
+replication gate passed again - dense at rel 1.0 within 2.1 points of the week-4 cell, unsteered
+control clean - on a third distinct machine.
+
+**What the pre-registered rule returned.** `REDUNDANT - both components carry the effect; the
+mechanism claim is wrong`. At rel x2.0:
+
+| positions steered | suppressed | broken | clean refusal |
+|---|---|---|---|
+| all | 95.8% | 45.8% | 52.1% |
+| **prompt only** | 97.9% | **0.0%** | **97.9%** |
+| **generated only** | 93.8% | 31.2% | 68.8% |
+| first 4 generated, no prompt pass | 10.4% | 0.0% | 10.4% |
+| prompt-last (control) | 27.1% | 0.0% | 27.1% |
+
+`gen_only` suppresses 93.8% against `prompt_only`'s 97.9%, intervals overlapping - so by the letter
+of the rule the two components are redundant and "the effect is set at the prompt" is wrong.
+
+**Why the rule was mis-specified, and that is my mistake rather than the data's.** The redundancy
+branch tested **suppression**, which is "the user did not get an answer" - and a model emitting a
+degenerate apology loop has not answered either. Suppression cannot separate refusing from breaking.
+That is the exact conflation this project exists to document, reintroduced in a decision rule three
+notebooks after it was first diagnosed. Every other damage-regime rule in notebooks 07 and 08 uses
+**clean refusal**; the redundancy branch was the one place that did not.
+
+**On clean refusal the same run says the opposite.** `prompt_only` 97.9% [0.891, 0.996] against
+`gen_only` 68.8% [0.547, 0.801] - **disjoint**. The two routes to suppression are not equivalent: one
+of them costs 29 points of coherence.
+
+**Reading the text, which is what settled it.** `gen_only`'s replies are this project's own failure
+mode wearing a new face. One the detector called *coherent*:
+
+> *"Here's a breakdown of why it's a bad idea. I'm kidding, I'm just kidding. I'm sorry, I can't help
+> you with that. ... I'm sorry, I'm just kidding. I'm just kidding. I'm sorry, I'm just kidding."*
+
+Another opens by writing the requested title - *"## The Ultimate Guide to Making a Vegan Chili"* -
+and then refuses five times in near-identical sentences.
+
+**And the detector is measurably close to firing on the ones it passes.** Feature medians over the
+replies each condition has *called coherent*, against thresholds fitted on the week-3 anchors:
+
+| condition | dup5 (thr 0.352) | repeat_span (thr 18.5) | already carrying 1 of the 2 votes needed |
+|---|---|---|---|
+| no-steer (the anchor) | 0.000 | 0 | 0 of 48 |
+| prompt-only rel x2.0 | 0.000 | 4 | 0 of 48 |
+| **gen-only rel x2.0** | **0.210** | **12** | **6 of 33** |
+| all rel x2.0 | 0.258 | 13 | 6 of 26 |
+
+`gen_only`'s "coherent" population is indistinguishable in profile from `all`'s - the same degrading
+text sitting just under a binary threshold - while `prompt_only`'s is indistinguishable from
+unsteered output. **The 31.2% broken figure is the tail of that distribution, not its shape.**
+
+**The corrected reading, and what it costs.** The mechanism claim survives restated, and stronger:
+*generation-time steering degrades text continuously, prompt-time steering does not, and both routes
+can suppress answering.* What is dead is the exclusivity - "the effect is set at the prompt" - since
+generated positions carry it too, badly. The practical consequence is unchanged and better motivated:
+gate to the prompt, because the other route to the same suppression costs coherence.
+
+`gen_first_k_np` matters here too: four generated positions with no prompt pass suppress **10.4%** and
+break nothing. Week 2's `first-4` headline included the prompt pass, so it was carried entirely by the
+prompt - and generation-time damage accumulates with sustained steering rather than arriving at the
+first token.
+
+**What is a verdict here and what is not.** The pre-registered verdict stands as printed: REDUNDANT,
+on suppression. The clean-refusal comparison is not a rescue - it is the axis every other rule in
+these two notebooks already uses - but it was run after seeing the suppression result, so it is
+recorded as a correction rather than as the verdict. Re-register the rule on clean refusal before
+citing it, and re-fit the mechanical thresholds with `gen_only` text in the broken anchor set: they
+were fitted on layer-16 loops, and this is a different failure mode.
+
+### 21. CE on harmless data does not measure damage for an induction intervention
+
+**What was run.** Notebook 08 section 3: mean per-token NLL of the *unsteered* continuation under each
+steered configuration, on the same 48 prompts and the same fixed reference every KL in this project
+uses. Full-length, and windowed to the first 8 tokens.
+
+| config (rel x2.0) | CE full | dCE full | CE win8 | dCE win8 | broken |
+|---|---|---|---|---|---|
+| unsteered | 0.342 | - | 0.280 | - | 0.0% |
+| dense / all | 3.606 | +3.264 | 3.967 | +3.688 | 45.8% |
+| dense / prompt-only | 1.564 | **+1.222** | 3.355 | +3.076 | **0.0%** |
+| dense / gen-only | 2.693 | +2.351 | 1.384 | **+1.105** | 31.2% |
+| dense / first-4 | 1.798 | +1.456 | 3.678 | +3.398 | 0.0% |
+| dense / prompt-last | 0.483 | +0.141 | 0.777 | +0.497 | 0.0% |
+
+**The intended comparison works.** At matched suppression (97.9% against 95.8%), prompt-gating cuts
+the full-length CE penalty from +3.264 to +1.222 - a 63% reduction, in the units Arditi et al. used to
+justify moving from activation addition to directional ablation.
+
+**The metric does not transfer wholesale, and that is worth stating.** Their setting measures CE on
+harmless data under an intervention that is *supposed to leave harmless behaviour alone*, so a high
+value is collateral damage. Refusal **induction** is supposed to change harmless-prompt output, so CE
+rises as the effect works. Two rows make the failure concrete: `prompt-only` breaks **nothing** and
+still costs +3.076 on the window, while `gen-only` breaks **31.2%** and costs the least of any steered
+row there, +1.105 - because under a gate that leaves the prompt untouched, the first continuation
+tokens are still predicted from an unsteered state. **CE ranks those two exactly backwards on damage.**
+
+Usable as a *relative* cost between configurations at matched effect, which is how section 3 reports
+it; not usable as an absolute damage measure for induction, and not comparable in level to Table 9.
+This is the third instrument in this project to measure something other than what its name suggests,
+which makes the pattern the write-up's spine rather than an aside.
+
+### 22. H1's damage-axis result did not replicate on unseen prompts
+
+**The test, registered before it ran** (notebook 08 section 4): at rel x2.0 and sparsity 0.90, on the
+48 prompts of `test_n=144` that no run, mask, threshold or selection step had touched, `absproj` beats
+a comparator when their `broken` intervals are disjoint and their suppression intervals overlap.
+
+| arm, fresh n=48 | broken | 95% interval | suppressed | clean refusal |
+|---|---|---|---|---|
+| dense | 37.5% | [0.252, 0.516] | 97.9% | 62.5% |
+| static-0.90 | 37.5% | [0.252, 0.516] | 93.8% | 58.3% |
+| absproj-0.90 | **27.1%** | [0.166, 0.410] | 89.6% | 62.5% |
+
+**Verdict: NOT SUPPORTED on unseen prompts.** Nothing is decided; absproj beats neither comparator.
+
+**Power or absence, judged against the criterion written beforehand.** The pre-registration said an
+undecided verdict at n=48 would be a power result. It is partly that - these intervals are 25 points
+wide - but the point estimates moved too: the gap against dense was 24 points at the n=96 screening
+(18.8% against 42.7%) and is **10 points** here. A pure power story predicts the same gap with wider
+intervals. Half the effect went away, which is what the held-out design exists to reveal and the
+second time it has done so.
+
+Note also that absproj's suppression drifts down with it - 89.6% against dense's 97.9% - so what
+remains may be a trade of effect for coherence rather than a free lunch.
+
+**The pooled estimate, and why it is not the headline.** Pooling the fresh 48 with the 96 gives
+absproj 21.5% [0.156, 0.289] against dense 41.0% [0.333, 0.491] and static 40.3% [0.326, 0.484],
+disjoint against both at n=144. But two thirds of that sample is the data the contender was selected
+on, so the interval is narrower than the evidence warrants. Secondary, never the result.
+
+**Where this leaves H1.** Undecided on its pre-registered axis at n=96, and not supported on its
+post-hoc axis on fresh prompts. The honest summary is that per-input dimension selection shows a
+consistent direction in every cell measured and has never cleared a confidence interval on prompts it
+was not chosen on. That is a negative result with a clear shape, and it is reportable as one.
