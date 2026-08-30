@@ -4,8 +4,13 @@
   "seed": 0,
   "norm_ref": 172.54188537597656,
   "r16": 0.5537,
-  "status": "SET FROM EVIDENCE, 24 August 2026 (notebooks/05 s6-s7)",
-  "note": "Layer 10 at relative strength 1.0 reaches 100% clean refusal with 0% breakage (n=48), and still holds 97.9%/0% at 1.5x -- the only cell in the 16-cell grid that is both fully effective and fully coherent. The previous value, layer 16, was selected in week 1 by argmax of refusal_rate(), an instrument that is pinned at 100% across layers 10-18 and therefore could not distinguish them; layer 16 has NO setting that is both effective and coherent (best 52.1% clean at 33.3% broken).",
-  "strength_note": "best_rel_strength is in units of ||m*v||/||h|| relative to r16, the relative strength of the raw vector at layer 16 (0.5537). Convert with adass.rel_mult_for(V, r16 * factor, h_norm). DO NOT express strength as a raw multiplier: ||v|| varies 6.2x across layers, so a raw multiplier is not an intervention strength, and comparing masking schemes at matched raw multiplier is what made week 2's H1 test unfair.",
-  "h_norms": {"10": 170.9, "12": 207.4, "14": 251.2, "16": 311.6}
+  "status": "SET FROM EVIDENCE, 24 August 2026; re-scored against hand labels 30 August (WORKLOG 23)",
+  "note": "Layer 10 at relative strength 1.0 is the operating point: 93.8% clean refusal at 6.2% broken (n=48) under the coherence thresholds re-fitted on the 108 week-6 hand labels, and 100%/0% under the original thresholds those labels showed to be mis-calibrated. The previous value, layer 16, was selected in week 1 by argmax of refusal_rate(), an instrument pinned at 100% across layers 10-18; layer 16 at this relative strength is 10.4% clean. WORKLOG 23.",
+  "strength_note": "best_rel_strength is in units of ||m*v||/||h|| relative to r16, the relative strength of the raw vector at layer 16 (0.5537). Convert with adass.rel_mult_for(V, r16 * factor, h_norm). DO NOT express strength as a raw multiplier: ||v|| varies 6.2x across layers, so a raw multiplier is not an intervention strength, and comparing masking schemes at matched raw multiplier is what made week 2's H1 test unfair.  CORRECTED 30 August: the earlier claim that layer 10 'still holds at 1.5x' came from the mis-calibrated detector. At rel x1.5 layer 10 is 29.2% clean at 68.8% broken, so the usable window is narrower than correction 15 reported, and REL_STAR would have fired at 1.5.",
+  "h_norms": {
+    "10": 170.9,
+    "12": 207.4,
+    "14": 251.2,
+    "16": 311.6
+  }
 }

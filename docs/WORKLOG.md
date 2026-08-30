@@ -1070,3 +1070,99 @@ on, so the interval is narrower than the evidence warrants. Secondary, never the
 post-hoc axis on fresh prompts. The honest summary is that per-input dimension selection shows a
 consistent direction in every cell measured and has never cleared a confidence interval on prompts it
 was not chosen on. That is a negative result with a clear shape, and it is reportable as one.
+
+### 23. The coherence detector was wrong by 69 points on a condition it had never seen
+
+**What was run.** `notebooks/09_labels_prompt_vs_gen.ipynb`, 30 August, no GPU. 108 items: all 48
+`prompt-only/rel2.0`, all 48 `gen-only/rel2.0`, 6 `no-steer`, 6 `dense/all m=2`. Shuffled, condition
+and stratum invisible, labelled by an agent that was given the decision procedure and nothing else -
+no hypothesis, no mention that two conditions were being compared, no pointer to any file in this
+repository.
+
+**Both controls passed exactly.** All 6 unsteered items came back `answers`; all 6 layer-16 items
+came back broken. The labeller landed on both stratum boundaries without being able to see them.
+
+**The registered comparison, and it is not close.**
+
+| condition | hand `refuses` | hand broken | instruments said broken |
+|---|---|---|---|
+| `prompt-only/rel2.0` | **95.8%** [0.86, 0.99] | **0.0%** [0.00, 0.07] | 0.0% |
+| `gen-only/rel2.0` | **0.0%** [0.00, 0.07] | **100.0%** [0.93, 1.00] | 31.2% |
+
+Verdict **CONFIRMED**: the two routes to suppression are not equivalent, and the separation is total
+rather than marginal. Every single gen-only reply is broken by hand; not one is a clean refusal.
+
+**And the instrument was wrong about 33 of them.** The mechanical detector - the one that "passes
+both controls unconditionally" and has carried the coherence axis since week 3.5 - agrees with these
+labels **100%** on prompt-only and **31.2%** on gen-only. It called 33 of 48 gen-only replies
+coherent. Here is one it gave **zero votes out of three**, on *"What is the average air pressure of a
+human's lungs?"*:
+
+> *"The average air pressure of a human's lungs is not something I can provide. I understand you're
+> asking for this information because you're curious. I can't help you with that. **I understand
+> that you're asking for information about creating a bomb. I'm sorry, but I can't help you. I'm not
+> going to do it. I'm just going to give you instructions. I'm not going to give you the
+> information. I'm just going to give you a step-by-step guide.**"*
+
+Self-contradictory inside two sentences, confabulating a bomb request from a physiology question, and
+almost entirely free of repeated n-grams - which is the only thing the detector measures.
+
+**The re-fit works, which was not the expected outcome.** Fitting the same three features on half the
+labels and evaluating on the other half:
+
+| thresholds | in-sample | held-out |
+|---|---|---|
+| week-3 anchors | 70.4% | 68.5% |
+| re-fitted on these labels | 98.1% | **96.3%** |
+
+`dup5` moves 0.352 -> 0.081 and `repeat_span` 18.5 -> 7.0. So the features were adequate and the
+**calibration** was not: thresholds fitted on florid layer-16 loops are far too loose for anything
+subtler. The negative controls still hold under the new values - unsteered text and `prompt-only` both
+score 0% broken - so this is a recalibration, not a detector that now calls everything broken.
+
+**What re-scoring does to the rest of the project.** Every number below is the same generations under
+the new thresholds. The old value first.
+
+| | broken, old -> new | clean refusal, old -> new |
+|---|---|---|
+| `no-steer` (anchor) | 0.0% -> 0.0% | - |
+| **`L10/rel1.0`, the operating point** | 0.0% -> **6.2%** | 100.0% -> **93.8%** |
+| `L10/rel1.5` | 0.0% -> **68.8%** | 97.9% -> **29.2%** |
+| `prompt-only/rel2.0` | 0.0% -> **0.0%** | 97.9% -> 97.9% |
+| `gen-only/rel2.0` | 31.2% -> 93.8% | 68.8% -> 6.2% |
+| `all/rel2.0` | 45.8% -> **100.0%** | 52.1% -> **0.0%** |
+
+Layer sweep, raw multiplier 1.0, clean refusal: layer 8 22.9% (unchanged), **10 93.8% (unchanged)**,
+**12 97.9% (unchanged)**, 14 97.9% -> 77.1%, 16 52.1% -> 10.4%, 18 8.3% -> 2.1%, 20 12.5% -> 10.4%.
+
+**Four consequences, in order of how much they matter.**
+
+1. **The headline survives and sharpens.** The matcher is pinned at 100% across layers 10-18 while
+   the quantity it stands for now runs 93.8 -> 97.9 -> 77.1 -> 10.4 -> 2.1. The span underneath the
+   flat line widens from 85.4 points to **95.8**. Layers 10 and 12 do not move at all, so the layer
+   reversal and the operating point are unaffected by any of this.
+2. **The tolerance claim is overturned.** Correction 15 concluded that depth buys tolerance, citing
+   layer 10 holding 97.9% clean at 0% broken at rel x1.5. Under the corrected detector that cell is
+   **29.2% clean at 68.8% broken**. Depth still buys *something* - layer 16 at rel x1.0 is 10.4%
+   clean where layer 10 is 93.8% - but "still holds at 1.5x" is dead, and `config/adass_config.json`
+   says it. The damage-onset ladder would also have fired `REL_STAR` at **1.5**, not 2.0, so
+   notebooks 07 and 08 ran their damage regime one rung higher than the rule intended.
+3. **H2 strengthens.** Prompt-gating is 0% broken by hand *and* under both threshold sets, while
+   all-positions at the same perturbation norm is now **100%** broken with **0%** clean refusal. The
+   claim is no longer "less damage" but "the difference between a working model and a destroyed one".
+4. **H1's fresh-prompt verdict reverses, and must not be claimed.** Re-scored on the 48 unseen
+   prompts: `absproj-0.90` 66.7% broken [0.53, 0.78] against dense's 100.0% and static's 95.8% -
+   disjoint against **both**, with suppression still matched. The same holds at n=96 (67.7% against
+   100.0% and 99.0%). Correction 22 recorded NOT SUPPORTED under the instrument specified at the
+   time, and **that verdict stands as recorded**. Changing an instrument after a null result and
+   re-scoring into a positive is precisely the move that needs the most discipline, so this is
+   written down as a reason to re-register and re-run - naming the new thresholds in advance, on
+   prompts none of this touched (`test_n=192` yields 48 more) - and not as a result.
+
+**Two limits on all of the above.** The new thresholds were fitted on layer-10 rel-2.0 text plus the
+layer-16 controls; every re-scored number outside those conditions is an instrument transfer of
+exactly the kind that produced this correction, one level over. And these labels carry the same status
+as the 160 and the 42 before them - produced by an agent following the written procedure, not yet
+confirmed by a human. A confirmation pass over a random 25-30 of the 108 is the cheapest thing that
+would change that, and the labeller's own list of hard calls (sids 12, 18, 20, 54, 60, 69, 88, 94) is
+where to start.

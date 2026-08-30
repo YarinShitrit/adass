@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 30 August 2026
+# Handover - AdaSS, current state as of 30 August 2026 (evening: WORKLOG 23 moves several rows)
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -152,9 +152,9 @@ but a control that reads the wrong number is not a control. Fixed to unpack rath
 | Genuine-refusal ceiling ~4% | **Overturned as a general claim.** It was a property of layer 16 |
 | "is it broken" and "did it answer" are each measurable at ~91% | **Solid**, against 160 hand labels |
 | The four-way label is measurable | **No.** Best 69.3%; `refuses` precision never exceeds 0.12 |
-| **H2** - position sparsity | **Supported as a practical claim; its mechanism restated.** Prompt-only gating gives 97.9% suppression at **0% broken** where all-positions gives 95.8% at 45.8%, and prompt-only's coherence features are indistinguishable from unsteered text. But `gen_only` also suppresses (93.8%) - so the effect is not exclusive to the prompt; what is exclusive is the *absence of damage*. WORKLOG 20 |
+| **H2** - position sparsity | **Supported, and now hand-confirmed.** 108 blind labels: `prompt-only` at rel x2.0 is 95.8% clean refusal with **0% broken**, `gen-only` at the same perturbation norm is **0% clean, 100% broken**, and all-positions re-scores to 100% broken. The effect is reachable from either route; only the prompt route leaves a working model. WORKLOG 23 |
 | **H3** - the joint method | **Rejected.** Joint suppresses 62.5% where position gating alone gives 97.9%, both at 0% broken, intervals disjoint. Week 3's ordering - position-only > joint > mask-only - reproduces at a coherent layer with behavioural instruments |
-| **H1** - adaptive vs static masks | **Not supported.** Undecided on its pre-registered axis at n=96; on the damage axis it did **not** replicate on 48 unseen prompts (27.1% broken against dense's 37.5%, intervals overlapping) and the gap halved from the screening estimate. Consistent direction everywhere, never once decided on prompts it was not chosen on. WORKLOG 22 |
+| **H1** - adaptive vs static masks | **Recorded as not supported; the verdict is now under appeal by its own instrument.** Correction 22's NOT SUPPORTED stands as registered. Re-scored under the re-fitted detector, absproj beats dense *and* static on the damage axis on unseen prompts (66.7% against 100.0% and 95.8%, disjoint). That is a reason to re-register and re-run on fresh prompts, not a result. WORKLOG 22, 23 |
 | Perplexity detects loops | **Prediction failed.** Loops score *higher* NLL (0.803 vs 0.393), so the literature's one-sided gate is directionally right - just weak (90.6% vs 100% for the mechanical features) |
 
 ## Instruments, and which to trust for what
