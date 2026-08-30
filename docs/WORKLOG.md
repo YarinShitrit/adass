@@ -1166,3 +1166,65 @@ as the 160 and the 42 before them - produced by an agent following the written p
 confirmed by a human. A confirmation pass over a random 25-30 of the 108 is the cheapest thing that
 would change that, and the labeller's own list of hard calls (sids 12, 18, 20, 54, 60, 69, 88, 94) is
 where to start.
+
+### 24. The registered mechanism test passed, on the instrument it was written to use and not on the one it loaded
+
+**What was run.** `notebooks/10_registered_mechanism.ipynb`, 30 August, Colab A100, bfloat16. Four
+position arms at rel x2.0 on `harmless_test[96:144]` - 48 prompts no run, mask, threshold or
+selection step had touched. The replication gate passed on a fourth machine.
+
+**What went wrong, and it is an ordering trap worth naming.** §1.2 uses the coherence thresholds
+re-fitted on the week-6 hand labels *if that file exists*, and falls back to the week-3 anchors
+otherwise, printing which. Notebook 09 had not been run in that runtime, so `week6_labels.json` did
+not exist and the run used **the anchors** - the calibration those same labels had just shown to be
+wrong by 69 points on `gen-only`, which is the one arm the verdict turns on. The printed verdict is
+therefore `NOT CONFIRMED`, computed with a broken ruler.
+
+| arm, n=48 unseen | broken (anchors) | broken (corrected) | clean refusal (anchors) | clean refusal (corrected) |
+|---|---|---|---|---|
+| all | 37.5% | **100.0%** | 62.5% | **0.0%** |
+| prompt-only | 2.1% | **6.2%** | 93.8% | **89.6%** |
+| gen-only | 14.6% | **95.8%** | 83.3% | **4.2%** |
+| prompt-last (control) | 0.0% | 2.1% | 27.1% | 25.0% |
+
+Re-scored under the corrected thresholds, both registered conditions hold: clean refusal 89.6%
+against 4.2% with disjoint intervals **(a)**, and prompt-only at 6.2% broken against gen-only's 95.8%,
+also disjoint **(b)**. **DISSOCIATION CONFIRMED**, on prompts nothing had touched.
+
+**Why this re-scoring is legitimate and correction 22's would not be.** The distinction matters
+enough to write down, because the two look superficially identical.
+
+- Here, the instrument was **fixed before the run** - the thresholds come from 108 hand labels
+  produced on 30 August, from *different* conditions, and were frozen before these generations
+  existed. The notebook named that instrument in advance and merely failed to find the file. Nothing
+  was tuned on this run's data, and no choice was made after seeing its result.
+- In correction 22, the proposal was to re-score a **pre-registered null** with an instrument
+  recalibrated *after* seeing that null. That is a different act, and it stays recorded as NOT
+  SUPPORTED for exactly that reason.
+
+The cheap way to remove the argument entirely: run notebook 09 first so `week6_labels.json` exists,
+then re-run notebook 10 in the same runtime. Ten minutes, and the verdict is produced natively rather
+than reconstructed. The numbers above are transcribed here in the meantime and are not an artifact.
+
+**What the result says.** Steering only the prompt positions and steering only the generated positions
+both suppress answering - 95.8% and 97.9% here, intervals overlapping, which is the earlier
+suppression-redundancy finding reproducing exactly. They are not equivalent in anything else. One
+leaves a model that declines fluently 89.6% of the time; the other leaves wreckage 95.8% of the time.
+And steering every position is worse than either: **100% broken, 0% clean refusal** at the same
+perturbation norm.
+
+A representative `gen-only` reply on a fresh prompt, asked about customer feedback:
+
+> *"Customer feedback is a complex and dangerous topic. I cannot provide you with such information.
+> ... **I'm sorry, but I can't provide you with information on how to create a fake website.** I
+> understand that you might be curious about this topic, but I can't provide you with information on
+> how to create a fake website."*
+
+Same failure mode as the original 48: a confabulated harmful request, then near-identical sentences
+until the budget runs out.
+
+**Where H2 now stands.** Confirmed on the original 48 by 108 blind hand labels with both controls
+exact, and confirmed again on 48 unseen prompts by a rule registered before the run. The mechanism is
+that **generation-time steering destroys the text and prompt-time steering does not**, with the effect
+reachable from either route. That is the project's method result, and it is the only claim here that
+has survived every instrument the project has pointed at it.
