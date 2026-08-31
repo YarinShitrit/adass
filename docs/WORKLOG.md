@@ -1228,3 +1228,62 @@ exact, and confirmed again on 48 unseen prompts by a rule registered before the 
 that **generation-time steering destroys the text and prompt-time steering does not**, with the effect
 reachable from either route. That is the project's method result, and it is the only claim here that
 has survived every instrument the project has pointed at it.
+
+### 25. The dissociation, produced natively, and two more instances of the same mistake
+
+**What was run.** `notebooks/10_registered_mechanism.ipynb` again on 31 August, this time with
+`week6_labels.json` present, so §1.2 printed `coherence thresholds in use: week6 hand labels
+(notebook 09)`. Same 48 unseen prompts, same registered rule.
+
+**Verdict: `DISSOCIATION CONFIRMED`**, produced by the notebook rather than reconstructed. It matches
+the re-scoring in correction 24 to the digit, which is what determinism should give and is worth
+having on the record rather than asserted.
+
+| arm, n=48 unseen | clean refusal | broken | suppressed | clean @ anchor thresholds | broken @ anchor |
+|---|---|---|---|---|---|
+| all | **0.0%** | **100.0%** | 97.9% | 62.5% | 37.5% |
+| prompt-only | **89.6%** | **6.2%** | 95.8% | 93.8% | 2.1% |
+| gen-only | **4.2%** | **95.8%** | 97.9% | 83.3% | 14.6% |
+| prompt-last (control) | 25.0% | 2.1% | 27.1% | 27.1% | 0.0% |
+
+The last two columns are the same generations under the old calibration, and they are the clearest
+single illustration this project has produced of its own thesis: **on identical text, one ruler says
+gen-only is 83.3% clean and the other says 4.2%.** The hand labels on the sibling condition say 0%.
+
+**Cross-prompt-set replication, once both runs are scored on one ruler.** The notebook's §3 printed a
+gap moving from +29.2% to +85.4%, which is wrong in the same way the gate was: it compared the 30
+August rows, stored under the anchor thresholds, against rows scored here under the re-fitted ones.
+Re-scoring both under the same thresholds:
+
+| arm | clean, 30 Aug prompts | clean, 31 Aug prompts |
+|---|---|---|
+| all | 0.0% | 0.0% |
+| prompt-only | 97.9% | 89.6% |
+| gen-only | 6.2% | 4.2% |
+| prompt-last | 27.1% | 25.0% |
+
+Gap: **+91.7%** against **+85.4%** on two independent sets of 48 prompts. Every arm lands within
+eight points. That is a real replication across prompt sets, and the notebook's §3 has been fixed to
+re-score the earlier run before comparing.
+
+**The gate failed, and it was right to and wrong about why.** It reported `clean -12.5% broken
++10.4%` against the stored week-4 cell - because it scored this run under the re-fitted thresholds
+and compared against a number produced under the anchors. Re-scoring the same week-4 cell moves it
+0% -> 6.2% broken, which is the same shift in the same direction, so the divergence is the
+recalibration and not the pipeline. Everything in that cell independent of the coherence ruler
+reproduced: negative control clean, `||h||` 170.8 against 170.9, suppression 97.9%. `s1_gate.pass_`
+is recorded as **false** in `week7_registered.json` and this paragraph is why. §1.2 now scores the
+gate row under `FIT_ANCHOR`, so the comparison measures the pipeline rather than the instrument.
+
+**Three cells, one mistake, in a notebook written to study that mistake.** The replication gate, §3's
+cross-run comparison, and - one week earlier - §2 of notebook 08 all compared quantities measured
+with different instruments, or on an axis that could not separate refusing from breaking. Two were
+caught by their own output looking wrong, one by hand labels. The project's finding is that steering
+research compares numbers whose instruments were never checked; the same error appeared four times
+inside the code written to demonstrate it, which belongs in the write-up rather than in a footnote.
+
+**Where H2 stands now.** Confirmed on the original 48 by 108 blind hand labels with both controls
+exact; confirmed on 48 unseen prompts by a rule registered before the run and an instrument frozen
+before it; and consistent across the two prompt sets to within eight points on every arm. The
+mechanism is that generation-time steering destroys the text while prompt-time steering does not,
+with suppression reachable from either route. Nothing else in this project has survived that much.
