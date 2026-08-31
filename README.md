@@ -117,10 +117,10 @@ adass/
 │   ├── 06_layer10_labels.ipynb      42 blind labels at the new operating point — RUN, no GPU
 │   ├── 07_h1_h3_layer10.ipynb       H1/H2/H3 at layer 10 — RUN twice, reproduced cell for cell
 │   ├── 08_mechanism.ipynb           gen_only, CE on harmless data, H1 on unseen prompts — RUN
-│   ├── 09_labels_prompt_vs_gen.ipynb  LIVE — 108 blind labels deciding H2, and the threshold
-│   │                                re-fit they pay for. No GPU, ~2h of labelling
-│   └── 10_registered_mechanism.ipynb  LIVE — the mechanism claim as a registered test on 48
-│                                    unseen prompts. ~10 min on a GPU
+│   ├── 09_labels_prompt_vs_gen.ipynb  108 blind labels + the threshold re-fit — RUN, no GPU
+│   ├── 10_registered_mechanism.ipynb  the mechanism as a registered test — RUN. CONFIRMED
+│   └── 11_h1_registered.ipynb       LIVE — H1's damage axis, registered on the corrected
+│                                    instrument, on 48 prompts nothing has touched. ~15 min GPU
 ├── data/
 │   ├── gold/               the 160 hand labels + the blind sheet. IRREPLACEABLE, and only
 │   │                       meaningful as a pair — labels are keyed by sid
@@ -161,15 +161,15 @@ finds it wherever it lives, and `adass.save_results(obj, "week4_layers.json")` w
 August (the confound is settled and the operating point moved to layer 10), and `notebooks/06`
 hand-confirmed that operating point with 42 blind labels.
 
-1. **`notebooks/09_labels_prompt_vs_gen.ipynb` — no GPU, and it gates the rest.** 108 blind labels
-   over both claim conditions in full, plus two controls. It settles H2 on human labels *and*
-   supplies the broken anchors the coherence detector needs re-fitting with — its thresholds were
-   fitted on layer-16 repetition loops and gen-only produces a failure mode that clears all three
-   while sitting just under each (WORKLOG 20).
-2. **`notebooks/10_registered_mechanism.ipynb` — ~10 minutes on a GPU.** The mechanism claim as a
-   registered test rather than a repaired one: the rule is written on clean refusal before the run,
-   and it runs on the 48 prompts of `test_n=144` nothing has touched. It picks up notebook 09's
-   re-fitted thresholds automatically if they exist, and reports both threshold sets either way.
+**Notebooks 09 and 10 have run.** H2 is confirmed three ways (WORKLOG 23-26) and the coherence
+detector has been re-calibrated against 108 hand labels that are themselves human-confirmed at 96.4%
+on that axis. What remains:
+
+1. **`notebooks/11_h1_registered.ipynb` — ~15 minutes on a GPU.** The last open file. H1's damage
+   axis is currently a registered null that its own corrected instrument reverses, which is not a
+   result in either direction. This registers the rule and both strengths in advance, runs on the 48
+   prompts of `test_n=192` that nothing has touched, and **hard-stops** if the corrected thresholds
+   are missing rather than falling back to the ones that caused the problem.
 3. **Fold it into the write-up.** The measurement result is the headline — the saturated selection
    metric — with the layer reversal as its demonstration and H2's prompt-versus-generation split as
    the method contribution. The "phenomenon is absent" framing from week 3.5 must go wherever it
