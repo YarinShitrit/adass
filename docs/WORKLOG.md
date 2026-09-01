@@ -1409,3 +1409,20 @@ supported at the primary strength, qualified at the secondary.**
 **Limits.** n=48 per arm; one model; one behaviour; one sparsity (0.90); and the 0.99 arms are not in
 this test at all. The damage axis was registered *here* and was not the axis correction 22
 pre-registered, so this is a new test that agrees with a re-scoring, not a vindication of it.
+
+### 28. H2's arithmetic, finally counted
+
+**The clause nobody had checked.** H2 as written in the proposal says *"steering <30% of positions
+retains most behavioral effect with lower perplexity/KL degradation than all-position steering"*.
+Every test of it measured effect and degradation; none measured the percentage.
+
+Counted on 31 August with the tokenizer, over the 48 harmless test prompts under the chat template:
+**median 21 prompt tokens**, against a 128-token generation budget. `prompt-only` therefore steers
+**14.1%** of the positions the vector could touch - less than half the threshold the hypothesis
+names. `first-4` comes to about 16.8%, also inside it; `prompt-last` is 0.7% and suppresses only
+27.1%, which is the control showing the clause is not satisfied by triviality.
+
+So H2 holds on every clause of its original wording: fewer than 30% of positions (14.1%), most of the
+behavioural effect retained (95.8% suppression against all-positions' 97.9%), and lower degradation
+(KL 1.83 against 6.09, cross-entropy +1.222 against +3.264). It is the only one of the three
+hypotheses that holds as literally stated, without a regime restriction or a re-registered axis.
