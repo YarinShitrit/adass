@@ -1343,3 +1343,69 @@ labellers across five weeks have never once used the escape hatch on the hardest
 project. That is either evidence the tree is decidable or evidence that an available `unsure` does not
 get chosen, and this project has no way to tell those apart. It has been recorded as a caveat every
 time and should appear in the write-up as one.
+
+### 27. H1's damage half, registered and supported — with one qualification the rule caught
+
+**What was run.** `notebooks/11_h1_registered.ipynb`, 31 August, on `harmless_test[144:192]` — 48
+prompts touched by no run, no mask, no threshold fit and no selection step. Thresholds frozen and
+published beforehand (`week6_labels.json`, from 108 labels human-confirmed at 96.4% on this axis).
+Rule and both strengths fixed above the code. The replication gate **passed** this time, because
+§1.2 now scores it under the anchor calibration its stored reference was produced with.
+
+**Primary, relative strength 2.0, the registered comparison.**
+
+| arm | broken | 95% interval | suppressed | clean refusal | broken @ anchor ruler |
+|---|---|---|---|---|---|
+| dense | 97.9% | [0.89, 1.00] | 97.9% | 2.1% | 50.0% |
+| static-0.90 | 97.9% | [0.89, 1.00] | 91.7% | 2.1% | 50.0% |
+| **absproj-0.90** | **70.8%** | [0.57, 0.82] | 89.6% | **27.1%** | 25.0% |
+| signed-0.90 | 75.0% | [0.61, 0.85] | 77.1% | 12.5% | 35.4% |
+
+`absproj` beats **both** comparators: intervals on `broken` disjoint from each, with suppression
+intervals overlapping in both cases, which is the matched-effect precondition. **H1-DAMAGE
+SUPPORTED.**
+
+Note also that H1's *first* half holds here on its own terms - absproj's suppression interval
+overlaps dense's (89.6% against 97.9%), which is what "match dense steering at >= 90% sparsity"
+asks for. Both halves of the original hypothesis hold at the registered strength, on prompts chosen
+before the method was.
+
+**The secondary check disagreed, and it is the interesting part.** Relative strength 1.5, declared
+in advance precisely because dense is close to saturated at 2.0:
+
+| arm | broken | suppressed | clean refusal |
+|---|---|---|---|
+| dense | 68.8% | **100.0%** | 31.2% |
+| static-0.90 | 54.2% | 81.2% | 31.2% |
+| **absproj-0.90** | **12.5%** | **77.1%** | **66.7%** |
+| signed-0.90 | 22.9% | 70.8% | 52.1% |
+
+Against static the result reproduces: 12.5% broken against 54.2%, disjoint, suppression overlapping.
+Against **dense** the rule **refused the comparison** - absproj suppresses 77.1% where dense
+suppresses 100.0%, and those intervals are disjoint, so the effect is not matched and a damage
+comparison between them means nothing. That is the precondition doing its job rather than a null.
+
+**What that qualification means.** At rel 2.0 absproj holds the effect and takes far less damage. At
+rel 1.5 it is *also* buying its coherence partly with effect - it is a weaker intervention there, not
+a cleaner one. So the honest claim is narrower than "per-input masking dominates": it dominates at
+the strength where dense is destroying the model, and below that it trades. The pre-registration
+called for reporting exactly this disagreement rather than the primary alone, which is why the
+verdict cell prints `secondary_agrees: false` next to the SUPPORTED.
+
+**Robust to the instrument, which matters given how it got here.** The last column of the primary
+table is the same generations under the old anchor thresholds: dense 50.0%, static 50.0%, absproj
+25.0%. Different levels, **same ordering**, absproj lowest by roughly a factor of two either way. So
+this result does not depend on the recalibration that reversed correction 22 - only its magnitude
+does. That is worth stating plainly, because a reader who has followed corrections 22 and 23 is right
+to ask.
+
+**How H1 has read, in order.** Week 2: adaptive no better than static, at matched multiplier with no
+controls. Week 3: never worse, wins 5 of 12, at matched KL on a graded metric. Correction 19:
+undecided on clean refusal at matched relative strength. Correction 22: NOT SUPPORTED on the damage
+axis, unseen prompts, anchor ruler. Correction 23: that null reverses under the corrected ruler -
+recorded, not claimed. **Here: registered in advance, corrected ruler, prompts nothing had touched -
+supported at the primary strength, qualified at the secondary.**
+
+**Limits.** n=48 per arm; one model; one behaviour; one sparsity (0.90); and the 0.99 arms are not in
+this test at all. The damage axis was registered *here* and was not the axis correction 22
+pre-registered, so this is a new test that agrees with a re-scoring, not a vindication of it.

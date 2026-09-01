@@ -1,4 +1,4 @@
-# Handover - AdaSS, current state as of 30 August 2026 (evening: WORKLOG 23 moves several rows)
+# Handover - AdaSS, current state as of 31 August 2026
 
 **Read this file first. It supersedes `WEEK3_5_SUMMARY.md`'s conclusion**, which was written before
 the layer sweep and says the opposite of what we now believe.
@@ -154,7 +154,7 @@ but a control that reads the wrong number is not a control. Fixed to unpack rath
 | The four-way label is measurable | **No.** Best 69.3%; `refuses` precision never exceeds 0.12 |
 | **H2** - position sparsity | **Confirmed three ways, and it is the project's method result.** 108 blind labels on the original 48, both controls exact: `prompt-only` 95.8% clean refusal at 0% broken against `gen-only` 0% clean at 100% broken. A rule registered before the run, on 48 unseen prompts, instrument frozen beforehand: 89.6% against 4.2% clean - DISSOCIATION CONFIRMED. And the two prompt sets agree within 8 points on every arm once both are scored on one ruler (+91.7% against +85.4%). All-positions is 100% broken, 0% clean. WORKLOG 23, 24, 25 The 108 labels are human-confirmed on a blind 28-item subsample: 96.4% agreement on the coherence axis, 82.1% four-class, five disagreements listed in WORKLOG 26 and none of them narrowing the gap. |
 | **H3** - the joint method | **Rejected.** Joint suppresses 62.5% where position gating alone gives 97.9%, both at 0% broken, intervals disjoint. Week 3's ordering - position-only > joint > mask-only - reproduces at a coherent layer with behavioural instruments |
-| **H1** - adaptive vs static masks | **Under a registered re-test.** Correction 22's NOT SUPPORTED stands as registered; re-scored under the corrected detector absproj beats dense *and* static on unseen prompts (66.7% broken against 100.0% and 95.8%), which is recorded and not claimed. `notebooks/11_h1_registered.ipynb` settles it: rule and both strengths fixed in advance, thresholds frozen and published, 48 prompts nothing has touched. WORKLOG 22, 23 |
+| **H1** - adaptive vs static masks | **Supported on its damage half, registered, on unseen prompts.** At rel x2.0 on `harmless_test[144:192]`, `absproj-0.90` breaks 70.8% [0.57, 0.82] against dense's and static's 97.9%, disjoint from both, with suppression matched (89.6% against 97.9%) - so H1's 'match dense' half holds too. Same ordering under the old thresholds, so it does not rest on the recalibration. **Qualified:** at rel x1.5 it beats static but the dense comparison is refused for unmatched effect - below the destructive regime absproj trades effect for coherence rather than dominating. WORKLOG 27 |
 | Perplexity detects loops | **Prediction failed.** Loops score *higher* NLL (0.803 vs 0.393), so the literature's one-sided gate is directionally right - just weak (90.6% vs 100% for the mechanical features) |
 
 ## Instruments, and which to trust for what
