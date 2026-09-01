@@ -22,7 +22,10 @@ is a **measurement result**, and as of 23 August it has a sharper form than "our
 > steering paper runs before it measures anything.**
 
 The substring matcher sits at exactly **100% for layers 10–18** while the true clean-refusal rate
-underneath it runs 93.8% → 97.9% → 47.9% → 12.5%. Week 1 chose the operating point by that metric's
+underneath it runs 93.8% → 97.9% → 77.1% → 10.4% → 2.1% — a **95.8-point** span under a flat line.
+(Those are the figures under the coherence thresholds re-calibrated against 108 hand labels on
+30 August; the original instrument gave 93.8 → 97.9 → 47.9 → 12.5, an 85.4-point span. The
+recalibration *widened* the finding. `docs/WORKLOG.md` 23.) Week 1 chose the operating point by that metric's
 argmax, and landed on layer 16 — the one layer in the range where steering destroys the model rather
 than steering it. The metric failure and the operating-point failure are one bug, one level apart.
 
@@ -32,8 +35,10 @@ than steering it. The metric failure and the operating-point failure are one bug
 came back **two-dimensional**: turning layer 16 down produces no effect rather than clean refusals,
 and pushing shallow layers up to layer 16's norm does not break them the same way. What depth buys is
 *tolerance* — how hard you can steer before the model stops working. On the dimensionless axis, layer
-10 reaches 100% clean refusal at 0% broken and still holds at 1.5×; layer 16 has no setting that is
-both. The operating point is now **layer 10 at relative strength 1.0**, hand-confirmed by 42 blind
+10 reaches 93.8% clean refusal at 6.2% broken where layer 16 manages 10.4%; layer 16 has no setting
+that is both effective and coherent. **What the recalibration killed** is the old claim that layer 10
+"still holds at 1.5×" — at that strength it is 29.2% clean at 68.8% broken, so the usable window is
+narrower than week 4 reported (WORKLOG 23). The operating point is now **layer 10 at relative strength 1.0**, hand-confirmed by 42 blind
 labels in `notebooks/06`. `notebooks/05` §6–§7 and `docs/HANDOVER.md` have it in full.
 
 **Open now:** H1, H2 and H3 have still never been tested in a regime where the model stays coherent.

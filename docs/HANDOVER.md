@@ -64,7 +64,7 @@ measured at 5.6% precision. Scoring that matcher over the same layer-sweep gener
 | clean refusal | 27.1% | 93.8% | 95.8% | **97.9%** | 47.9% | 12.5% | **10.4%** |
 
 **The selection metric is exactly 100% for layers 10-18 while the quantity it stands in for moves
-85.4 points underneath it.** An argmax over a constant selects nothing; which layer emerged was
+85.4 points underneath it** - 95.8 points once the coherence detector is corrected against hand labels (WORKLOG 23), so the recalibration widens this finding rather than threatening it.** An argmax over a constant selects nothing; which layer emerged was
 decided by tie-breaking order. The re-selection recorded in `README.md` - "lowest KL among
 *saturating* configs" - inherits the defect, because "saturating" is that same matcher.
 
