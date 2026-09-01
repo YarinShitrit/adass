@@ -108,6 +108,13 @@ Three hypotheses follow:
 | **H2** | Steering only **early positions** is nearly as effective at lower cost | **Overturned.** It looked true; the model was answering anyway |
 | **H3** | **Both together** — the proposal's actual thesis | Not supported as measured, and the measurement is compromised |
 
+> **These three statuses are as of week 3 and two of them are now wrong.** The final verdicts, with
+> the runs behind them, are in `HANDOVER.md`: **H1 supported** on its damage half at the destructive
+> strength and failing at the operating point; **H2 supported** and confirmed three ways, which is the
+> reverse of the row above; **H3 rejected**. This document is kept at its week-3 state deliberately -
+> it explains the concepts and the code, and rewriting its history would cost the record of what was
+> believed when. Read it for the mechanics, not for the verdicts.
+
 ### 1.5 The four masking methods
 
 These are the competitors in the H1 test. All produce a boolean mask over the 2304 dimensions;
